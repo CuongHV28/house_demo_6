@@ -233,10 +233,10 @@ function addWallWithDoorAndWindow(
   resultMesh.position.set(wallMesh.position.x, wallMesh.position.y, wallMesh.position.z);
 
   // Clean up: Remove the original wall mesh from the scene if added
-  scene.remove(wallMesh);
+  // scene.remove(wallMesh);
 
   // Add the final mesh to the scene
-  scene.add(resultMesh);
+  // scene.add(resultMesh);
 
   return resultMesh;
 }
@@ -342,10 +342,119 @@ floorMesh.position.z = wallMesh2.position.z - wallSettings1.depth / 2; // Center
 scene.add(floorMesh);
 
 //function to add a floor
-function addFloor() {
-  // add a floor with 4 sides with these settings: frontwidth, backwidth, leftdepth, rightdepth, height, material
+function addFloor(
+  height, 
+  frontwidth, 
+  sidewidth, 
+  thickness, 
+  material
+) {
+  // add a floor with 4 sides with these settings: frontwidth, sidewidth, height, material
+  // assume thickness is the same for all walls
+
+  // create the left wall object with a door and a window
+  const leftWallSettings: IWallSettings = {
+    width: sidewidth,
+    height: height,
+    depth: thickness,
+    material: material,
+    position: {
+      x: undefined,
+      y: 0,
+      z: undefined
+    }
+  }
+  // create the front wall object with a door and a window
+  const frontWallSettings: IWallSettings = {
+    width: frontwidth,
+    height: height,
+    depth: thickness,
+    material: material,
+    position: {
+      x: undefined,
+      y: 0,
+      z: undefined
+    }
+  }
+  // create 4 walls with settings
+  const leftWall = addWallWithDoorAndWindow(leftWallSettings, doorSettings1, windowSettings1);
+  const frontWall = addWallWithDoorAndWindow(frontWallSettings, doorSettings2, windowSettings2);
+  // create the right wall object with same settings as left wall but no door or window
+  const rightWall = addWallWithDoorAndWindow(leftWallSettings);
+  // create the back wall object with same settings as front wall but no door or window
+  const backWall = addWallWithDoorAndWindow(frontWallSettings);
+  
+  // Position the walls
+  // frontWall.position.set(6, 4, 20);
+  // left wall
+  leftWall.position.x = frontWall.position.x - (frontWallSettings.width / 2) + (leftWallSettings.depth / 2); 
+  leftWall.position.y = frontWall.position.y; // Align with frontWall on the y-axis
+  leftWall.position.z = frontWall.position.z + (frontWallSettings.depth / 2) - (leftWallSettings.width / 2); // Align with frontWall on the z-axis
+  leftWall.rotation.y = -Math.PI / 2; // Rotate 90 degrees to make the angle
+  // right wall opposite of left wall
+  rightWall.position.x = leftWall.position.x + frontWallSettings.width;
+  rightWall.position.y = frontWall.position.y; // Align with frontWall on the y-axis
+  rightWall.position.z = leftWall.position.z; // Align with leftWall on the z-axis
+  rightWall.rotation.y = Math.PI / 2; // Rotate to face the opposite direction
+  // back wall opposite of front wall
+  backWall.position.x = frontWall.position.x;
+  backWall.position.y = frontWall.position.y; // Align with frontWall on the y-axis
+  backWall.position.z = frontWall.position.z - leftWallSettings.width + frontWallSettings.depth; // Align with frontwall on the z-axis
+
+  // scene.add(frontWall);
+  // scene.add(leftWall);
+  // scene.add(rightWall);
+  // scene.add(backWall);
+
+  // add a floor ground plane if needed
+  const floorGeometry = new THREE.BoxGeometry(frontWallSettings.width + leftWallSettings.depth, 0.1, leftWallSettings.width); // depth is wallSettings1.width, width is wallSettings2.width, height is very thin (0.1)
+  const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+
+  // Position the floor
+  // Assuming wallMesh1.position.y is the base of the walls, adjust if necessary
+  floorMesh.position.x = frontWall.position.x + (leftWallSettings.depth / 2); // Centered between wall2 and wall4
+  floorMesh.position.y = frontWall.position.y - (frontWallSettings.height / 2); // Just below the walls, adjust if your wallMesh1.position.y is not the base
+  floorMesh.position.z = leftWall.position.z; // Centered between wall1 and wall3
+
+  // Add the floor to the scene
+  // scene.add(floorMesh);
+  const floorGroup = new THREE.Group();
+  floorGroup.add(frontWall);
+  floorGroup.add(leftWall);
+  floorGroup.add(rightWall);
+  floorGroup.add(backWall);
+  floorGroup.add(floorMesh);
+
+  return floorGroup;
 }
 
+const wallSettingsTest1: IWallSettings = {
+  width: 10,
+  height: 8,
+  depth: 0.5,
+  material: wallMaterial,
+  position: {
+    x: undefined,
+    y: 0,
+    z: undefined
+  }
+}
+//test add floor
+const testFloor = addFloor(wallSettingsTest1.height, wallSettings2.width, wallSettings1.width,  wallSettingsTest1.depth, wallMaterial);
+testFloor.position.set(6, 4, 20);
+scene.add(testFloor);
+
+// Create the first additional floor above the existing one
+const floorAbove = addFloor(wallSettingsTest1.height, wallSettings2.width, wallSettings1.width, wallSettingsTest1.depth, wallMaterial);
+// Position it above the existing floor. Adjust '4' if the base position of your floors is different.
+floorAbove.position.set(6, 4 + wallSettingsTest1.height, 20);
+scene.add(floorAbove);
+
+// Create the second additional floor below the existing one
+const floorBelow = addFloor(wallSettingsTest1.height, wallSettings2.width, wallSettings1.width, wallSettingsTest1.depth, wallMaterial);
+// Position it below the existing floor. Adjust '4' if the base position of your floors is different.
+floorBelow.position.set(6, 4 - wallSettingsTest1.height, 20);
+scene.add(floorBelow);
 
 function animate() {
     requestAnimationFrame(animate);
