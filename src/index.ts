@@ -455,7 +455,48 @@ const floorBelow = addFloor(wallSettingsTest1.height, wallSettings2.width, wallS
 // Position it below the existing floor. Adjust '4' if the base position of your floors is different.
 floorBelow.position.set(6, 4 - wallSettingsTest1.height, 20);
 scene.add(floorBelow);
+// function addFloor(
+//   height, 
+//   frontwidth, 
+//   sidewidth, 
+//   thickness, 
+//   material
+// ) {
+//   // Your existing setup for wall settings...
 
+//   // Create the front wall with a door and a window
+//   const frontWall = addWallWithDoorAndWindow(frontWallSettings, doorSettings1, windowSettings1);
+
+//   // Create the left wall as a plain wall without a door or window
+//   const leftWall = addWallWithDoorAndWindow({
+//     ...leftWallSettings,
+//     position: { ...leftWallSettings.position }
+//   });
+
+//   // Create the right wall as a plain wall without a door or window
+//   const rightWall = addWallWithDoorAndWindow({
+//     ...leftWallSettings, // Assuming right wall has the same settings as left wall
+//     position: { ...leftWallSettings.position }
+//   });
+
+//   // Create the back wall as a plain wall without a door or window
+//   const backWall = addWallWithDoorAndWindow({
+//     ...frontWallSettings, // Assuming back wall has the same settings as front wall
+//     position: { ...frontWallSettings.position }
+//   });
+
+//   // Your existing code to position walls and create the floor...
+
+//   // Grouping and returning the floor group
+//   const floorGroup = new THREE.Group();
+//   floorGroup.add(frontWall);
+//   floorGroup.add(leftWall);
+//   floorGroup.add(rightWall);
+//   floorGroup.add(backWall);
+//   floorGroup.add(floorMesh);
+
+//   return floorGroup;
+// }
 function animate() {
     requestAnimationFrame(animate);
     renderer.render(scene, camera);
