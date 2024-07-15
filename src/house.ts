@@ -113,24 +113,24 @@ function addWallWithHoles(wallSettings: IWallSettings) {
     }
 
     // Add balcony
-    if (wallSettings.balcony) {
-        const balcony = wallSettings.balcony;
-        let balconyMesh = new THREE.Mesh(new THREE.BoxGeometry(balcony.width, balcony.height, balcony.depth), balcony.material);
+    // if (wallSettings.balcony) {
+    //     const balcony = wallSettings.balcony;
+    //     let balconyMesh = new THREE.Mesh(new THREE.BoxGeometry(balcony.width, balcony.height, balcony.depth), balcony.material);
     
-        // Assuming the balcony is positioned relative to a specific door
-        const door = wallSettings.doors ? wallSettings.doors[balcony.positionRelativeToDoor] : undefined;
-        if (door) {
-            const doorCenterX = door.offsetLeft + door.width / 2;
-            // Adjust the balcony's x position to be centered over the door
-            const balconyOffsetX = doorCenterX;
-            let balconyMatrix = new THREE.Matrix4();
-            balconyMatrix.makeTranslation(balconyOffsetX, baseYPosition, 0);
-            balconyMesh.applyMatrix4(balconyMatrix);
-        }
+    //     // Assuming the balcony is positioned relative to a specific door
+    //     const door = wallSettings.doors ? wallSettings.doors[balcony.positionRelativeToDoor] : undefined;
+    //     if (door) {
+    //         const doorCenterX = door.offsetLeft + door.width / 2;
+    //         // Adjust the balcony's x position to be centered over the door
+    //         const balconyOffsetX = doorCenterX;
+    //         let balconyMatrix = new THREE.Matrix4();
+    //         balconyMatrix.makeTranslation(balconyOffsetX, baseYPosition, 0);
+    //         balconyMesh.applyMatrix4(balconyMatrix);
+    //     }
     
-        let balconyCSG = CSG.fromMesh(balconyMesh);
-        wallCSG = wallCSG.union(balconyCSG);
-    }
+    //     let balconyCSG = CSG.fromMesh(balconyMesh);
+    //     wallCSG = wallCSG.union(balconyCSG);
+    // }
 
     let resultMesh = wallCSG.toMesh(new THREE.Matrix4());
     resultMesh.material = wallSettings.material;

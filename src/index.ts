@@ -24,16 +24,13 @@ import {
   Brush,
 } from "three-bvh-csg";
 
-import { IHouseSide } from './houses/types';
-import { CSG } from 'three-csg-ts';
-
 import { 
     addWallWithDoorAndWindow,
     addHoleOnWallCSG,
     addWallWithHoles,
     addFloorCustom
 } from './house';
-
+import * as dat from 'dat.gui';
 
 
 // init scene
@@ -145,15 +142,15 @@ scene.add(groundPlane);
 
 
 const windowSettings1: IHoleSettings = {
-  width: 2,
-  height: 2,
+  width: 1.5,
+  height: 1.5,
   offsetLeft: 0.3,
   top: 5,
 }
 
 const doorSettings1: IHoleSettings = {
   width: 2,
-  height: 5,
+  height: 2.5,
   offsetLeft: -0.2,
 }
 
@@ -165,7 +162,7 @@ const windowSettings2: IHoleSettings = {
 }
 const doorSettings2: IHoleSettings = {
   width: 1.5,
-  height: 4,
+  height: 2.5,
   offsetLeft: -0.1,
 }
 
@@ -185,7 +182,7 @@ const balconySettings: IBalconySettings = {
 
 const wallSettings1: IWallSettings = {
   width: 10,
-  height: 8,
+  height: 6,
   depth: 0.5,
   material: wallMaterial,
   doors: [doorSettings1],
@@ -200,7 +197,7 @@ const wallSettings1: IWallSettings = {
 
 const wallSettings2: IWallSettings = {
   width: 5,
-  height: 8,
+  height: 6,
   depth: 0.5,
   material: wallMaterial,
   doors: [doorSettings2],
@@ -214,7 +211,7 @@ const wallSettings2: IWallSettings = {
 
 const wallSettings3: IWallSettings = {
   width: 5,
-  height: 8,
+  height: 6,
   depth: 0.5,
   material: wallMaterial,
   position: {
@@ -226,7 +223,7 @@ const wallSettings3: IWallSettings = {
 
 const wallSettings4: IWallSettings = {
   width: 10,
-  height: 8,
+  height: 6,
   depth: 0.5,
   material: wallMaterial,
   doors: [],
@@ -238,134 +235,86 @@ const wallSettings4: IWallSettings = {
   }
 }
 
-//function to add a floor
-function addFloor(
-  height, 
-  frontwidth, 
-  sidewidth, 
-  thickness, 
-  material
-) {
-  // add a floor with 4 sides with these settings: frontwidth, sidewidth, height, material
-  // assume thickness is the same for all walls
-
-  // create the left wall object with a door and a window
-  const leftWallSettings: IWallSettings = {
-    width: sidewidth,
-    height: height,
-    depth: thickness,
-    material: material,
-    position: {
-      x: undefined,
-      y: 0,
-      z: undefined
-    }
-  }
-  // create the front wall object with a door and a window
-  const frontWallSettings: IWallSettings = {
-    width: frontwidth,
-    height: height,
-    depth: thickness,
-    material: material,
-    position: {
-      x: undefined,
-      y: 0,
-      z: undefined
-    }
-  }
-  // create 4 walls with settings
-  const leftWall = addWallWithDoorAndWindow(leftWallSettings, doorSettings1, windowSettings1);
-  const frontWall = addWallWithDoorAndWindow(frontWallSettings, doorSettings2, windowSettings2);
-  // create the right wall object with same settings as left wall but no door or window
-  const rightWall = addWallWithDoorAndWindow(leftWallSettings);
-  // create the back wall object with same settings as front wall but no door or window
-  const backWall = addWallWithDoorAndWindow(frontWallSettings);
-  
-  addWallWithHoles
-  // Position the walls
-  // frontWall.position.set(6, 4, 20);
-  // left wall
-  leftWall.position.x = frontWall.position.x - (frontWallSettings.width / 2) + (leftWallSettings.depth / 2); 
-  leftWall.position.y = frontWall.position.y; // Align with frontWall on the y-axis
-  leftWall.position.z = frontWall.position.z + (frontWallSettings.depth / 2) - (leftWallSettings.width / 2); // Align with frontWall on the z-axis
-  leftWall.rotation.y = -Math.PI / 2; // Rotate 90 degrees to make the angle
-  // right wall opposite of left wall
-  rightWall.position.x = leftWall.position.x + frontWallSettings.width;
-  rightWall.position.y = frontWall.position.y; // Align with frontWall on the y-axis
-  rightWall.position.z = leftWall.position.z; // Align with leftWall on the z-axis
-  rightWall.rotation.y = Math.PI / 2; // Rotate to face the opposite direction
-  // back wall opposite of front wall
-  backWall.position.x = frontWall.position.x;
-  backWall.position.y = frontWall.position.y; // Align with frontWall on the y-axis
-  backWall.position.z = frontWall.position.z - leftWallSettings.width + frontWallSettings.depth; // Align with frontwall on the z-axis
-
-  // scene.add(frontWall);
-  // scene.add(leftWall);
-  // scene.add(rightWall);
-  // scene.add(backWall);
-
-  // add a floor ground plane if needed
-  const floorGeometry = new THREE.BoxGeometry(frontWallSettings.width + leftWallSettings.depth, 0.1, leftWallSettings.width); // depth is wallSettings1.width, width is wallSettings2.width, height is very thin (0.1)
-  const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
-
-  // Position the floor
-  // Assuming wallMesh1.position.y is the base of the walls, adjust if necessary
-  floorMesh.position.x = frontWall.position.x + (leftWallSettings.depth / 2); // Centered between wall2 and wall4
-  floorMesh.position.y = frontWall.position.y - (frontWallSettings.height / 2); // Just below the walls, adjust if your wallMesh1.position.y is not the base
-  floorMesh.position.z = leftWall.position.z; // Centered between wall1 and wall3
-
-  // Add the floor to the scene
-  // scene.add(floorMesh);
-  const floorGroup = new THREE.Group();
-  floorGroup.add(frontWall);
-  floorGroup.add(leftWall);
-  floorGroup.add(rightWall);
-  floorGroup.add(backWall);
-  floorGroup.add(floorMesh);
-
-  return floorGroup;
-}
-
 // Create the first floor
 const floorCustom = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, wallMaterial);
 floorCustom.position.set(0, 4, 0);
 scene.add(floorCustom);
 
 
-const wallSettingsTest1: IWallSettings = {
-  width: 10,
-  height: 8,
-  depth: 0.5,
-  material: wallMaterial,
-  position: {
-    x: undefined,
-    y: 0,
-    z: undefined
+// Function to add a new floor
+
+// Function to add floors based on user input
+function addHouse(numberOfFloors: number) {
+  // Basic validation
+  if (numberOfFloors < 1 || !Number.isInteger(numberOfFloors)) {
+    console.error('Invalid number of floors. Please enter a positive integer.');
+    return; // Exit the function if validation fails
+  }
+
+  for (let i = 0; i < numberOfFloors; i++) {
+    const newFloor = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, wallMaterial);
+    newFloor.position.set(0, 4 + i * wallSettings1.height, 0);
+    scene.add(newFloor);
   }
 }
 
-//test add floor
-const testFloor = addFloor(wallSettingsTest1.height, wallSettings2.width, wallSettings1.width,  wallSettingsTest1.depth, wallMaterial);
-testFloor.position.set(6, 4, 20);
-scene.add(testFloor);
+// Function to reset the scene
+function resetHouse() {
+  // Reset the number of floors to its default value
+  floorData.numberOfFloors = 1; // Assuming 1 is the default value
 
-// Create the first additional floor above the existing one
-let floorAbove = addFloor(wallSettingsTest1.height, wallSettings2.width, wallSettings1.width, wallSettingsTest1.depth, wallMaterial);
-// Position it above the existing floor. Adjust '4' if the base position of your floors is different.
-floorAbove.position.set(6, 4 + wallSettingsTest1.height, 20);
-scene.add(floorAbove);
+  // Reset other settings to their default values if needed
+  // e.g., floorData.someOtherSetting = defaultValue;
 
-// Create the first additional floor above the existing one
-const floorAbove2 = addFloor(wallSettingsTest1.height, wallSettings2.width, wallSettings1.width, wallSettingsTest1.depth, wallMaterial);
-// Position it above the existing floor. Adjust '4' if the base position of your floors is different.
-floorAbove2.position.set(6, 4 + 2*wallSettingsTest1.height, 20);
-scene.add(floorAbove2);
+  // Update the GUI to reflect the reset values
+  updateGUIController();
+  // Remove all floors from the scene
+  removeAllFloors();
+  // Add the default floor back
+  addHouse(1);
+}
 
-// Create the second additional floor below the existing one
-const floorBelow = addFloor(wallSettingsTest1.height, wallSettings2.width, wallSettings1.width, wallSettingsTest1.depth, wallMaterial);
-// Position it below the existing floor. Adjust '4' if the base position of your floors is different.
-floorBelow.position.set(6, 4 - wallSettingsTest1.height, 20);
-scene.add(floorBelow);
+function updateGUIController() {
+  const numberOfFloorsController = floorFolder.__controllers.find(controller => controller.property === 'numberOfFloors');
+  if (numberOfFloorsController) {
+    numberOfFloorsController.setValue(floorData.numberOfFloors);
+    // Rebind or refresh the GUI if necessary here
+  } else {
+    console.error('numberOfFloors controller not found in floorFolder');
+  }
+}
+
+// Function to remove all floors from the scene
+function removeAllFloors() {
+  // Assuming the floors are added to the scene directly
+  // You may need to adjust this based on your scene setup
+  const floors = scene.children.filter(child => child instanceof THREE.Group && child.name !== 'GroundPlane');
+  floors.forEach(floor => scene.remove(floor));
+}
+
+// Create a new dat.GUI instance
+const gui = new dat.GUI();
+
+// Create a folder for floor settings
+const floorFolder = gui.addFolder('Floor Settings');
+
+// Object to hold user input
+const floorData = {
+  numberOfFloors: 1, // Default to 1 floor
+  addHouse: function() { addHouse(this.numberOfFloors); }, // Function to add floors
+  resetHouse: function() { resetHouse(); } // Function to reset floors
+};
+
+// Add a controller for the number of floors within the folder
+floorFolder.add(floorData, 'numberOfFloors', 1, 10).name('Number of Floors').step(1);
+
+// Add a button to the folder to trigger the addition of new floors
+floorFolder.add(floorData, 'addHouse').name('Add Floors');
+floorFolder.add(floorData, 'resetHouse').name('Reset');
+
+// Open the folder by default to draw attention to it
+floorFolder.open();
+
 
 
 function animate() {

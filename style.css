@@ -1,0 +1,16 @@
+/* Increase the font size for better readability */
+.dg .property-name, .dg .c {
+    font-size: 14px;
+}
+
+/* Change the background color of the GUI for better visibility */
+.dg.ac {
+    background-color: #f0f0f0;
+}
+
+/* Change button appearance */
+.dg .cr.function {
+    background-color: #8c8;
+    color: white;
+    border: none;
+}
