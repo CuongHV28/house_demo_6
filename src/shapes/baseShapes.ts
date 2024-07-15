@@ -7,6 +7,9 @@ export interface IWallSettings {
     height: number;
     depth: number;
     material: THREE.Material;
+    doors?: IHoleSettings[];
+    windows?: IHoleSettings[];
+    balcony?: IBalconySettings;
     position: {
         x?: number;
         y: number;
@@ -30,6 +33,20 @@ export interface IHoleSettings {
     left?: number;
     offsetLeft?: number;
     shapes?: any[];
+}
+
+export interface IBalconySettings {
+    width: number;
+    height: number;
+    depth: number;
+    material: THREE.Material;
+    positionRelativeToDoor: number; // This could be an index of the door it's related to
+    heightOffset: number; // Height offset from the base of the door
+    position: {
+        x?: number;
+        y: number;
+        z?: number;
+    };
 }
 
 export function wallHole(w: number, h: number, x: number, y: number) {
