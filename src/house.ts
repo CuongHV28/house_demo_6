@@ -154,6 +154,11 @@ function addFloorCustom(
     // create the back wall object with same settings as front wall but no door or window
     const backWall = addWallWithHoles(backWallSettings);
 
+    frontWall.name = 'frontWall';
+    leftWall.name = 'leftWall';
+    rightWall.name = 'rightWall';
+    backWall.name = 'backWall';
+
     // Position the walls
     // left wall
     leftWall.position.x = frontWall.position.x - (frontWallSettings.width / 2) + (leftWallSettings.depth / 2); 

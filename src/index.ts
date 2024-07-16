@@ -150,7 +150,7 @@ const windowSettings1: IHoleSettings = {
 
 const doorSettings1: IHoleSettings = {
   width: 2,
-  height: 2.5,
+  height: 4,
   offsetLeft: -0.2,
 }
 
@@ -162,7 +162,7 @@ const windowSettings2: IHoleSettings = {
 }
 const doorSettings2: IHoleSettings = {
   width: 1.5,
-  height: 2.5,
+  height: 4,
   offsetLeft: -0.1,
 }
 
@@ -183,7 +183,7 @@ const balconySettings: IBalconySettings = {
 const wallSettings1: IWallSettings = {
   width: 10,
   height: 6,
-  depth: 0.5,
+  depth: 0.25,
   material: wallMaterial,
   doors: [doorSettings1],
   windows: [windowSettings1, windowSettings2],
@@ -198,7 +198,7 @@ const wallSettings1: IWallSettings = {
 const wallSettings2: IWallSettings = {
   width: 5,
   height: 6,
-  depth: 0.5,
+  depth: 0.25,
   material: wallMaterial,
   doors: [doorSettings2],
   windows: [windowSettings2],
@@ -212,7 +212,7 @@ const wallSettings2: IWallSettings = {
 const wallSettings3: IWallSettings = {
   width: 5,
   height: 6,
-  depth: 0.5,
+  depth: 0.25,
   material: wallMaterial,
   position: {
     x: undefined,
@@ -224,7 +224,7 @@ const wallSettings3: IWallSettings = {
 const wallSettings4: IWallSettings = {
   width: 10,
   height: 6,
-  depth: 0.5,
+  depth: 0.25,
   material: wallMaterial,
   doors: [],
   windows: [windowSettings1],
@@ -260,7 +260,28 @@ function addHouse(numberOfFloors: number) {
     const newFloor = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, wallMaterial);
     newFloor.position.set(0, 4 + i * wallSettings1.height, 0);
     scene.add(newFloor);
-    floorObjects.push(`Floor ${i + 1}`); // Add the floor name to the global list
+
+    const frontWall = addWallWithHoles(wallSettings1);
+    const leftWall = addWallWithHoles(wallSettings2);
+    // create the right wall object with same settings as left wall but no door or window
+    const rightWall = addWallWithHoles(wallSettings3);
+    // create the back wall object with same settings as front wall but no door or window
+    const backWall = addWallWithHoles(wallSettings4);
+
+    frontWall.name = 'frontWall';
+    leftWall.name = 'leftWall';
+    rightWall.name = 'rightWall';
+    backWall.name = 'backWall';
+
+    floorObjects.push({
+      name: `Floor ${i + 1}`,
+      walls: {
+        front: frontWall,
+        left: leftWall,
+        back: rightWall,
+        right: backWall
+      }
+    });
   }
 
   updateGUIController(); // Step 3: Update the GUI with the new list of floors
@@ -285,23 +306,58 @@ function updateGUIController() {
   const numberOfFloorsController = floorFolder.__controllers.find(controller => controller.property === 'numberOfFloors');
   if (numberOfFloorsController) {
     numberOfFloorsController.setValue(floorData.numberOfFloors);
-    // Rebind or refresh the GUI if necessary here
   } else {
     console.error('numberOfFloors controller not found in floorFolder');
   }
 
-  // Dynamically update the 'Floor List' folder
-  // First, clear existing floor list entries
-  while (floorListFolder.__controllers.length) {
-    floorListFolder.remove(floorListFolder.__controllers[0]);
+  // Attempt to properly clear existing floor list entries
+  Object.keys(floorListFolder.__folders).forEach(folderName => {
+    const folder = floorListFolder.__folders[folderName];
+    floorListFolder.removeFolder(folder);
+  });
+  // Reset the folders object to ensure it's clear
+  floorListFolder.__folders = {};
+
+  // Dynamically update the 'Floor List' folder with floors and walls
+  floorObjects.forEach((floorObj, index) => {
+    let floorFolderName = `Floor ${index}`;
+    let floorFolder = floorListFolder.__folders[floorFolderName];
+    // If the folder already exists, remove it (or you could choose to use it directly)
+    if (floorFolder) {
+      floorListFolder.removeFolder(floorFolder);
+      floorFolder = null; // Ensure it's marked as removed
+    }
+    // Create a new folder since it doesn't exist or was just removed
+    if (!floorFolder) {
+      floorFolder = floorListFolder.addFolder(floorFolderName);
+    }
+
+    // Correctly iterate over the walls of the floor object
+    Object.entries(floorObj.walls).forEach(([wallName, wall]) => {
+      floorFolder.add({[`Show ${wallName}`]: () => handleWallClick(wall)}, `Show ${wallName}`);
+    });
+  });
+}
+
+let currentlyDisplayedWall : THREE.Mesh = null;
+
+function handleWallClick(wall: THREE.Mesh) {
+  // If there's already a wall displayed, remove it from the scene
+  if (currentlyDisplayedWall) {
+    scene.remove(currentlyDisplayedWall);
+    currentlyDisplayedWall = null; // Reset the reference
   }
 
-  // Then, add each floor as a selectable option in the 'Floor List' folder
-  floorObjects.forEach(floorName => {
-    // For each floor, add a controller that, when clicked, can do something
-    // Here, we're just logging the floor name, but you could extend this to select or highlight the floor in your scene
-    floorListFolder.add({[floorName]: () => console.log(`${floorName} selected`)}, floorName);
-  });
+  // Clone the selected wall and adjust its position
+  const wallCopy = wall.clone();
+  wallCopy.position.y = 4; // Adjust the position as needed
+  wallCopy.position.z += 10; // Adjust the position as needed
+
+  // Add the cloned wall to the scene
+  scene.add(wallCopy);
+
+  // Update the global variable to reference the newly added cloned wall
+  currentlyDisplayedWall = wallCopy;
 }
 
 // Function to remove all floors from the scene
@@ -312,7 +368,6 @@ function removeAllFloors() {
   floorObjects = []; // Clear the global list of floor objects
   updateGUIController(); // Update the GUI to reflect the removal
 }
-
 
 // Create a new dat.GUI instance
 const gui = new dat.GUI();
