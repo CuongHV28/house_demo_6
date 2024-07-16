@@ -244,6 +244,8 @@ scene.add(floorCustom);
 // Function to add a new floor
 
 // Function to add floors based on user input
+let floorObjects = [];
+
 function addHouse(numberOfFloors: number) {
   // Basic validation
   if (numberOfFloors < 1 || !Number.isInteger(numberOfFloors)) {
@@ -251,20 +253,23 @@ function addHouse(numberOfFloors: number) {
     return; // Exit the function if validation fails
   }
 
+  // Clear existing floors before adding new ones
+  removeAllFloors();
+
   for (let i = 0; i < numberOfFloors; i++) {
     const newFloor = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, wallMaterial);
     newFloor.position.set(0, 4 + i * wallSettings1.height, 0);
     scene.add(newFloor);
+    floorObjects.push(`Floor ${i + 1}`); // Add the floor name to the global list
   }
+
+  updateGUIController(); // Step 3: Update the GUI with the new list of floors
 }
 
 // Function to reset the scene
 function resetHouse() {
   // Reset the number of floors to its default value
   floorData.numberOfFloors = 1; // Assuming 1 is the default value
-
-  // Reset other settings to their default values if needed
-  // e.g., floorData.someOtherSetting = defaultValue;
 
   // Update the GUI to reflect the reset values
   updateGUIController();
@@ -274,7 +279,9 @@ function resetHouse() {
   addHouse(1);
 }
 
+
 function updateGUIController() {
+  // Update the numberOfFloors controller
   const numberOfFloorsController = floorFolder.__controllers.find(controller => controller.property === 'numberOfFloors');
   if (numberOfFloorsController) {
     numberOfFloorsController.setValue(floorData.numberOfFloors);
@@ -282,21 +289,37 @@ function updateGUIController() {
   } else {
     console.error('numberOfFloors controller not found in floorFolder');
   }
+
+  // Dynamically update the 'Floor List' folder
+  // First, clear existing floor list entries
+  while (floorListFolder.__controllers.length) {
+    floorListFolder.remove(floorListFolder.__controllers[0]);
+  }
+
+  // Then, add each floor as a selectable option in the 'Floor List' folder
+  floorObjects.forEach(floorName => {
+    // For each floor, add a controller that, when clicked, can do something
+    // Here, we're just logging the floor name, but you could extend this to select or highlight the floor in your scene
+    floorListFolder.add({[floorName]: () => console.log(`${floorName} selected`)}, floorName);
+  });
 }
 
 // Function to remove all floors from the scene
 function removeAllFloors() {
-  // Assuming the floors are added to the scene directly
-  // You may need to adjust this based on your scene setup
+  // Remove all floors from the scene
   const floors = scene.children.filter(child => child instanceof THREE.Group && child.name !== 'GroundPlane');
   floors.forEach(floor => scene.remove(floor));
+  floorObjects = []; // Clear the global list of floor objects
+  updateGUIController(); // Update the GUI to reflect the removal
 }
+
 
 // Create a new dat.GUI instance
 const gui = new dat.GUI();
 
 // Create a folder for floor settings
 const floorFolder = gui.addFolder('Floor Settings');
+const floorListFolder = gui.addFolder('Floor List');
 
 // Object to hold user input
 const floorData = {
@@ -305,15 +328,26 @@ const floorData = {
   resetHouse: function() { resetHouse(); } // Function to reset floors
 };
 
-// Add a controller for the number of floors within the folder
-floorFolder.add(floorData, 'numberOfFloors', 1, 10).name('Number of Floors').step(1);
+function init() {
+  // Add a controller for the number of floors within the folder
+  floorFolder.add(floorData, 'numberOfFloors', 1, 10).name('Number of Floors').step(1);
 
-// Add a button to the folder to trigger the addition of new floors
-floorFolder.add(floorData, 'addHouse').name('Add Floors');
-floorFolder.add(floorData, 'resetHouse').name('Reset');
+  // Add a button to the folder to trigger the addition of new floors
+  floorFolder.add(floorData, 'addHouse').name('Add Floors');
+  floorFolder.add(floorData, 'resetHouse').name('Reset');
 
-// Open the folder by default to draw attention to it
-floorFolder.open();
+  // Open the folder by default to draw attention to it
+  floorFolder.open();
+  addHouse(1); // Add the default floor
+  
+  updateGUIController(); // Update the GUI controller
+
+  // Programmatically toggle the visibility of the floor list folder
+  // floorListFolder.close(); // Close the folder
+  floorListFolder.open(); // Then open it again
+}
+
+init();
 
 
 
