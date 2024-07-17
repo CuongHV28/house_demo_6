@@ -10,6 +10,7 @@ export interface IWallSettings {
     doors?: IHoleSettings[];
     windows?: IHoleSettings[];
     balcony?: IBalconySettings;
+    stairs?: IStairsSettings;
     position: {
         x?: number;
         y: number;
