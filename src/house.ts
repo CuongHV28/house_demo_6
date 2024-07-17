@@ -14,7 +14,7 @@ import { colors,
     phongMaterial 
 } from './materials';
 
-import { IHoleSettings, IWallSettings } from './shapes/baseShapes';
+import { IHoleSettings, IWallSettings, IStairsSettings } from './shapes/baseShapes';
 import { CSG } from 'three-csg-ts';
 
 function addWallWithDoorAndWindow(
@@ -137,6 +137,25 @@ function addWallWithHoles(wallSettings: IWallSettings) {
     return resultMesh;
 }
 
+function createStairs(settings : IStairsSettings) {
+    const stairs = new THREE.Group(); // Create a group to hold all the steps
+    // const stepMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 }); // Green steps
+  
+    for (let i = 0; i < settings.steps; i++) {
+        const stepGeometry = new THREE.BoxGeometry(settings.stepWidth, settings.stepHeight, settings.stepDepth);
+        const stepMesh = new THREE.Mesh(stepGeometry, settings.stepMaterial);
+  
+        // Position each step
+        stepMesh.position.x = 0; // Centered on X
+        stepMesh.position.y = settings.stepHeight / 2 + i * settings.stepHeight; // Stacked on Y
+        stepMesh.position.z = -i * settings.stepDepth; // Staggered on Z
+  
+        stairs.add(stepMesh); // Add step to the group
+    }
+  
+    return stairs; // Return the group containing all steps
+}
+
 
 function addFloorCustom(
     frontWallSettings: IWallSettings, 
@@ -185,6 +204,33 @@ function addFloorCustom(
     floorMesh.position.y = frontWall.position.y - (frontWallSettings.height / 2); // Just below the walls, adjust if your wallMesh1.position.y is not the base
     floorMesh.position.z = leftWall.position.z; // Centered between wall1 and wall3
 
+    
+    //stair
+    // Add a staircase starting at the top of the floor mesh
+    const steps = 10;
+    const stepWidth = 1;
+    const stepHeight = (frontWallSettings.height - floorGeometry.parameters.height) / steps;
+    const stairSettings: IStairsSettings = {
+        steps: steps,
+        stepWidth: stepWidth,
+        stepHeight: stepHeight,
+        stepDepth: 0.5,
+        material: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
+        position: {
+            x: 0,
+            y: 0,
+            z: 0
+        }
+    };
+    const staircase = createStairs(stairSettings); // Example: 10 steps, each 1 unit wide, 0.5 units high, 0.5 units deep
+    // Position the staircase at the top of the floor mesh
+    // Assuming the staircase starts at the front back of the floor
+    staircase.position.x = floorMesh.position.x - (stairSettings.stepDepth * stairSettings.steps) + 1.5 * leftWallSettings.depth + 1; // Adjust based on the total width of the staircase
+    staircase.position.y = floorMesh.position.y + 0.05; // Slightly above the floor to avoid z-fighting
+    // Correct calculation for the staircase's Z position to be centered and flush against the back wall
+    staircase.position.z = backWall.position.z + backWallSettings.depth /2 + stairSettings.stepWidth / 2; // Adjust based on the total depth of the staircase
+    staircase.rotateY(-Math.PI / 2); // Rotate the staircase to face the opposite direction
+
     // Group and return all elements
     const floorGroup = new THREE.Group();
     floorGroup.add(frontWall);
@@ -193,6 +239,8 @@ function addFloorCustom(
     floorGroup.add(backWall);
     // Add the floorMesh to the group after creating it as before
     floorGroup.add(floorMesh);
+    // Add the staircase to the group
+    floorGroup.add(staircase);
 
     return floorGroup;
 }
@@ -201,5 +249,6 @@ export {
     addWallWithDoorAndWindow,
     addHoleOnWallCSG,
     addWallWithHoles,
-    addFloorCustom
+    addFloorCustom,
+    createStairs
 };

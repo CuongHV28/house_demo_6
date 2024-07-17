@@ -49,6 +49,24 @@ export interface IBalconySettings {
     };
 }
 
+
+export interface IStairsSettings {
+    steps: number,
+    stepWidth: number,
+    stepHeight: number,
+    stepDepth: number,
+    material: THREE.Material;
+    position: {
+        x?: number;
+        y: number;
+        z?: number;
+    };
+    rotation?: {
+        x?: number;
+        y?: number;
+        z?: number;
+    };
+}
 export function wallHole(w: number, h: number, x: number, y: number) {
     const hole = new Operation(new THREE.BoxGeometry(w, h, 0.7)); //BoxBufferGeometry
     hole.operation = SUBTRACTION; //ADDITION; // ;

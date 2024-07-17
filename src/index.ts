@@ -12,7 +12,7 @@ import { colors,
   lambert, 
   phongMaterial } from './materials';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { IHoleSettings, IWallSettings, IBalconySettings } from './shapes/baseShapes';
+import { IHoleSettings, IWallSettings, IBalconySettings, IStairsSettings } from './shapes/baseShapes';
 
 import {
   Evaluator,
@@ -28,7 +28,8 @@ import {
     addWallWithDoorAndWindow,
     addHoleOnWallCSG,
     addWallWithHoles,
-    addFloorCustom
+    addFloorCustom,
+    createStairs
 } from './house';
 import * as dat from 'dat.gui';
 
@@ -405,29 +406,24 @@ function init() {
 init();
 
 
-function createStairs(steps, stepWidth, stepHeight, stepDepth) {
-  const stairs = new THREE.Group(); // Create a group to hold all the steps
-  const stepMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 }); // Green steps
-
-  for (let i = 0; i < steps; i++) {
-      const stepGeometry = new THREE.BoxGeometry(stepWidth, stepHeight, stepDepth);
-      const stepMesh = new THREE.Mesh(stepGeometry, stepMaterial);
-
-      // Position each step
-      stepMesh.position.x = 0; // Centered on X
-      stepMesh.position.y = stepHeight / 2 + i * stepHeight; // Stacked on Y
-      stepMesh.position.z = -i * stepDepth; // Staggered on Z
-
-      stairs.add(stepMesh); // Add step to the group
-  }
-
-  return stairs; // Return the group containing all steps
-}
-
 // Create and add stairs to the scene
-const stairs = createStairs(10, 1, 0.5, 0.5); // 10 steps, 20 units wide, 2 units high, 10 units deep
+const stairSettings: IStairsSettings = {
+  steps: 10,
+  stepWidth: 1,
+  stepHeight: 0.5,
+  stepDepth: 0.5,
+  material: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
+  position: {
+      x: 0,
+      y: 0,
+      z: 0
+  }
+};
+const stairs = createStairs(stairSettings); // 10 steps, 20 units wide, 2 units high, 10 units deep
 
 stairs.position.set(12, 4, 8); // Set the position of the entire staircase
+// stairs.position.y = groundPlaneHeight + groundPlaneYPosition; // Align the staircase with the ground plane
+stairs.rotation.y = -Math.PI / 2; // Rotate the staircase 90 degrees
 scene.add(stairs); // Add the staircase group to the scene
 
 
