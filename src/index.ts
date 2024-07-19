@@ -147,11 +147,27 @@ const windowSettings1 : IDoorSettings = {
   width: 0.1,
   height: 0.1,
   depth: 1,
-  offsetLeft: 0.2,
+  offsetLeft: 0.5,
   offsetGround: 0.8,
 };
 
 const windowSettings2 : IDoorSettings = {
+  width: 0.2,
+  height: 0.2,
+  depth: 1,
+  offsetLeft: 0.9,
+  offsetGround: 0.5,
+};
+
+const windowSettings3 : IDoorSettings = {
+  width: 0.2,
+  height: 0.2,
+  depth: 1,
+  offsetLeft: 0.25,
+  offsetGround: 0.5,
+};
+
+const windowSettings4 : IDoorSettings = {
   width: 0.2,
   height: 0.2,
   depth: 1,
@@ -230,7 +246,7 @@ const wallSettings2: IWallSettings = {
   depth: 0.25,
   material: wallMaterial,
   doors: [doorSettings2],
-  windows: [windowSettings2],
+  windows: [windowSettings3],
   stairs: undefined,
   position: new THREE.Vector3(0, 0, 0),
   rotation: new THREE.Euler(0, 0, 0),
@@ -253,6 +269,26 @@ const wallSettings4: IWallSettings = {
   material: wallMaterial,
   doors: [],
   windows: [windowSettings1],
+  position: new THREE.Vector3(0, 0, 0),
+  rotation: new THREE.Euler(0, 0, 0),
+}
+
+
+
+const roofWallSettings1: IWallSettings = {
+  width: 10,
+  height: 6,
+  depth: 0.25,
+  material: wallMaterial,
+  position: new THREE.Vector3(0, 0, 0),
+  rotation: new THREE.Euler(0, 0, 0),
+}
+
+const roofWallSettings2: IWallSettings = {
+  width: 5,
+  height: 6,
+  depth: 0.25,
+  material: wallMaterial,
   position: new THREE.Vector3(0, 0, 0),
   rotation: new THREE.Euler(0, 0, 0),
 }
@@ -336,7 +372,7 @@ function addHouse(numberOfFloors: number) {
   }
 
   // Create and position the roof
-  const testRoof = addRoofTop(wallSettings1, wallSettings2, wallSettings3, wallSettings4, wallMaterial);
+  const testRoof = addRoofTop(roofWallSettings1, roofWallSettings2, roofWallSettings2, roofWallSettings1, wallMaterial);
   testRoof.position.set(0,numberOfFloors * wallSettings1.height + wallSettings1.height/4, 0); // Adjust X and Z if necessary to align with your house dimensions
   scene.add(testRoof);
 

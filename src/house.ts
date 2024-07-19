@@ -16,7 +16,7 @@ import { colors,
 
 import { IHoleSettings, IWallSettings, IStairsSettings, IDoorSettings } from './shapes/baseShapes';
 import { CSG } from 'three-csg-ts';
-import { Evaluator, Operation, SUBTRACTION } from 'three-bvh-csg';
+import { ADDITION, Evaluator, Operation, SUBTRACTION } from 'three-bvh-csg';
 
 function addWallWithDoorAndWindow(
     wallSettings: IWallSettings, 
@@ -78,9 +78,7 @@ function addHoleOnWallCSG(
     wallMesh: any, 
     holes: any[], 
     wallSettings: IWallSettings, 
-    material: THREE.Material, 
-    baseYPosition: number, 
-    heightOffsetFunction: (hole: any) => number
+    material: THREE.Material
 ): any {
     let wallCSG = CSG.fromMesh(wallMesh);
     holes.forEach(hole => {
@@ -89,8 +87,9 @@ function addHoleOnWallCSG(
         let holeDepth = wallSettings.depth * 1.1;
 
         let holeX = wallMesh.position.x - wallSettings.width / 2 + hole.offsetLeft * wallSettings.width;
-        let holeY = wallMesh.position.y - wallSettings.height / 2 + holeHeight / 2;
+        let holeY = wallMesh.position.y - wallSettings.height / 2 + holeHeight / 2 + hole.offsetGround * wallSettings.height;
         let holeZ = wallMesh.position.z;
+
 
         let holeMesh = new THREE.Mesh(new THREE.BoxGeometry(holeWidth, holeHeight, holeDepth), material);
         let holeMatrix = new THREE.Matrix4();
@@ -109,6 +108,7 @@ csgEvaluator = new Evaluator();
 csgEvaluator.attributes = ["position", "normal"];
 csgEvaluator.useGroups = false;
 
+// door and window frame
 interface IFrame {
     x?: number;
     y?: number;
@@ -146,6 +146,119 @@ const frame = ({
     return result;
 };
 
+// balcony railing
+export interface IBalconyMaterials {
+    default: any;
+    alu?: any;
+    fabric?: any[];
+}
+
+interface IBalconyRailing {
+    materials: IBalconyMaterials;
+    width?: number;
+    height?: number;
+    space?: number;
+    railwidth?: number;
+}
+export const balconyRaling = ({
+    height = 1,
+    width = 2,
+    space = 0.1,
+    railwidth = 0.06,
+    materials
+}: IBalconyRailing) => {
+    const g = new THREE.Group();
+    
+    const count = Math.round(width / space);
+    space = width / count;
+    
+    const toprail = new THREE.Mesh(
+        new THREE.BoxGeometry(width + railwidth, railwidth, railwidth),
+        materials.alu || materials.default
+    );
+    toprail.position.x = width / 2;
+    toprail.position.y = height;
+    toprail.position.z = 0;
+    toprail.receiveShadow = true;
+    toprail.castShadow = true;
+    g.add(toprail);
+    toprail.matrixAutoUpdate = false;
+    toprail.updateMatrix();
+    
+    for (var i = 0; i <= count; i++) {
+        const rail = new THREE.Mesh(
+        new THREE.BoxGeometry(0.02, height, 0.02),
+        materials.alu || materials.default
+    );
+        rail.position.x = i * space;
+        rail.position.y = height / 2;
+        rail.position.z = 0;
+        rail.receiveShadow = true;
+        rail.castShadow = true;
+        g.add(rail);
+        rail.matrixAutoUpdate = false;
+        rail.updateMatrix();
+    }
+
+    return g;
+};
+
+
+// shutters
+interface IAweningMaterials {
+    // Define the properties of IAweningMaterials here
+}
+
+interface IShutter {
+    materials: IAweningMaterials;
+    x?: number;
+    y?: number;
+    z?: number;
+    width?: number;
+    height?: number;
+}
+const shutter = ({ width = 2, height = 2, materials }: IShutter) => {
+    const framemesh = frame({
+        width: width,
+        height: height,
+        framewidth: [0.05, 0.05, 0.05, 0.05],
+        depth: 0.04,
+    });
+    const shutterframe = new Operation(framemesh.geometry);
+  
+    const innerheight = height - 0.05 - 0.05;
+    const innerwidth = width - 0.05 - 0.05;
+    const shutterparts = Math.ceil(innerheight / 0.1 + 0.005);
+    const shutterPartHeight = 0.1;
+    const spacingBetweenParts = 0.005;
+  
+    const originalshutterpart = new Operation(
+        new THREE.BoxGeometry(innerwidth, 0.1, 0.02)
+    );
+    originalshutterpart.operation = ADDITION;
+    originalshutterpart.position.x = 0.01;
+    originalshutterpart.rotation.x = 2.5;
+  
+    let shutterY = innerheight / 2 - shutterPartHeight / 2; // Initial Y position for the first shutter part
+    for (var i = 0; i < shutterparts; i++) {
+        const shutterpart = originalshutterpart.clone();
+        shutterpart.position.y = shutterY;
+        shutterframe.add(shutterpart);
+
+        shutterframe.matrixAutoUpdate = false;
+        shutterframe.updateMatrix();
+        shutterY -= (shutterPartHeight + spacingBetweenParts); // Move down for the next part
+    }
+  
+    const result = csgEvaluator.evaluateHierarchy(shutterframe);
+    result.castShadow = true;
+    result.receiveShadow = true;
+    result.material = materials.default;
+
+  
+    return result;
+};
+
 
 function addWallWithHoles(wallSettings: IWallSettings) {
     let wallMesh = new THREE.Mesh(new THREE.BoxGeometry(wallSettings.width, wallSettings.height, wallSettings.depth), wallSettings.material);
@@ -155,12 +268,12 @@ function addWallWithHoles(wallSettings: IWallSettings) {
 
     // Subtract door holes
     if (wallSettings.doors) {
-        wallMesh = addHoleOnWallCSG(wallMesh, wallSettings.doors, wallSettings, windowMaterial, baseYPosition, door => door.height / 2); 
+        wallMesh = addHoleOnWallCSG(wallMesh, wallSettings.doors, wallSettings, windowMaterial); 
     }
 
     // Subtract window holes
     if (wallSettings.windows) {
-        wallMesh = addHoleOnWallCSG(wallMesh, wallSettings.windows, wallSettings, windowMaterial, baseYPosition, window => window.top);
+        wallMesh = addHoleOnWallCSG(wallMesh, wallSettings.windows, wallSettings, windowMaterial);
     }
 
     let resultMesh = wallMesh;
@@ -169,21 +282,99 @@ function addWallWithHoles(wallSettings: IWallSettings) {
     // add door parts
     if (wallSettings.doors) {
         wallSettings.doors.forEach(door => {
-            let doorWidth = door.width * wallSettings.width;
-            let doorHeight = door.height * wallSettings.height;
-            let doorDepth = wallSettings.depth * 1.1;
-            let holeX = wallMesh.position.x - wallSettings.width / 2 + door.offsetLeft * wallSettings.width;
-            let holeY = wallMesh.position.y - wallSettings.height / 2 + doorHeight / 2;
-            let holeZ = wallMesh.position.z;
+            const doorWidth = door.width * wallSettings.width;
+            const doorHeight = door.height * wallSettings.height;
+            const doorDepth = wallSettings.depth * 1.1;
+
+            const holeX = wallMesh.position.x - wallSettings.width / 2 + door.offsetLeft * wallSettings.width;
+            const holeY = wallMesh.position.y - wallSettings.height / 2 + doorHeight / 2 + door.offsetGround * wallSettings.height;
+            const holeZ = wallMesh.position.z;
 
             // add door frame
-            let doorMatrix = new THREE.Matrix4();
+            const doorMatrix = new THREE.Matrix4();
             doorMatrix.makeTranslation(holeX, holeY, holeZ);
-            let doorFrame = frame({ width: doorWidth, height: doorHeight, depth: wallSettings.depth });
+            const doorFrame = frame({ width: doorWidth, height: doorHeight, depth: wallSettings.depth });
             doorFrame.applyMatrix4(doorMatrix);
             resultMesh.add(doorFrame);
 
-            // add door 
+            // add door shutters
+            const frameThickness = 0.05;
+            const doorSettings = {
+                shutters: 1,
+                materials: {
+                    default: woodMaterial,
+                    alu: windowMaterial,
+                },
+                open: [0, 0],
+            };
+            const innerWidth = doorWidth - frameThickness * 2;
+            const shutterwidth = innerWidth / doorSettings.shutters;
+            const shutterheight = doorHeight - frameThickness * 2;
+            let doorX = frameThickness;
+            const doorGroupRight = new THREE.Group();
+
+            const doorShutter = shutter({
+                width: shutterwidth,
+                height: shutterheight,
+                materials: doorSettings.materials,
+            });
+            doorShutter.receiveShadow = true;
+            // door.position.z = 0;
+            doorShutter.castShadow = true;
+
+            let previousGroup;
+            let counter = 0;
+            for (var i = doorSettings.shutters; i > 0; i--) {
+                counter++;
+                const isEven = counter % 2 === 1;
+
+                const doorGroup = new THREE.Group();
+                let posX = 0;
+                if (i !== 1 && previousGroup) {
+                const rotatedShutterWidth =
+                    shutterwidth * Math.abs(Math.cos(previousGroup.rotation.y));
+                    posX = doorX + innerWidth - rotatedShutterWidth * 2;
+                }
+                if (i === 1) {
+                    doorGroup.position.x = doorX;
+                } else if (isEven) {
+                    doorGroup.position.x = doorX + innerWidth;
+                } else {
+                    doorGroup.position.x = doorX + innerWidth - i * shutterwidth;
+                }
+
+                const doorclone = doorShutter.clone();
+                doorGroup.add(doorclone);
+                if (i === 1) {
+                    doorclone.position.x = holeX;
+                } else if (isEven) {
+                    doorclone.position.x = holeX - wallSettings.width / 2 + doorWidth / 2;
+                } else {
+                    doorclone.position.x = holeX - wallSettings.width / 2 + doorWidth / 2;
+                }
+                doorclone.position.y = holeY;
+                doorclone.position.z = holeZ;
+
+                doorclone.matrixAutoUpdate = false;
+                doorclone.updateMatrix();
+
+                if (doorSettings.open && doorSettings.open[i] !== null) {
+                    if (i === 1) {
+                        doorGroup.rotation.y = THREE.MathUtils.degToRad(doorSettings.open[0]);
+                    } else if (isEven) {
+                        doorGroup.rotation.y = THREE.MathUtils.degToRad(-doorSettings.open[1]);
+                    } else {
+                        doorGroup.rotation.y = THREE.MathUtils.degToRad(doorSettings.open[1]);
+                        doorGroup.position.x = posX;
+                    }
+                    resultMesh.add(doorGroup);
+                }
+
+                previousGroup = doorGroup;
+            }
+            
+            resultMesh.add(doorGroupRight);
+
 
 
             // add balcony
@@ -204,10 +395,60 @@ function addWallWithHoles(wallSettings: IWallSettings) {
                 
                 const balconyMesh = new THREE.Mesh(new THREE.BoxGeometry(balconyWidth, balconyHeight, balconyDepth), balconySettings.material);
                 balconyMesh.position.set(balconyX, balconyY, balconyZ);
+
+                // Add railing to the balcony
+                // const railingSpace = 0.2;
+                // const railingMaterial : IBalconyMaterials = {
+                //     default: new THREE.MeshLambertMaterial({ color: 0x00ff00 }), // Green railing
+                //     alu: new THREE.MeshLambertMaterial({ color: 0x111111 }) // Dark grey railing
+                // }
+                // const railingLeft = balconyRaling({
+                //     width: balconyDepth * 0.9,
+                //     space: railingSpace,
+                //     materials: railingMaterial
+                // });
+                // railingLeft.rotation.y = Math.PI / -2;
+                // railingLeft.position.x = balconyX - balconyWidth / 2;
+                // railingLeft.position.z = balconyZ - balconyDepth;
+
+                // const railingRight = railingLeft.clone();
+                // railingRight.position.x = balconyZ + balconyDepth / 2;
+
+                // const railingFront = balconyRaling({
+                //     width: balconyWidth - 0.2,
+                //     space: railingSpace,
+                //     materials: settings.materials
+                // });
+                // railingFront.position.x = balconyLeft + 0.1;
+                // railingFront.position.z = settings.depth - 0.1;
+                // g.add(railingFront);
             
                 // Add the balcony mesh to the group
+                // balconyMesh.add(railingLeft);
+                // balconyMesh.add(railingRight);
+                // balconyMesh.add(railingLeft);
+                
                 resultMesh.add(balconyMesh);
             }
+        });
+    }
+
+    // add window parts
+    if (wallSettings.windows) {
+        wallSettings.windows.forEach(window => {
+            let windowWidth = window.width * wallSettings.width;
+            let windowHeight = window.height * wallSettings.height;
+            let windowDepth = wallSettings.depth * 1.1;
+            let holeX = wallMesh.position.x - wallSettings.width / 2 + window.offsetLeft * wallSettings.width;
+            let holeY = wallMesh.position.y - wallSettings.height / 2 + windowHeight / 2 + window.offsetGround * wallSettings.height;
+            let holeZ = wallMesh.position.z;
+
+            // add window frame
+            let windowMatrix = new THREE.Matrix4();
+            windowMatrix.makeTranslation(holeX, holeY, holeZ);
+            let windowFrame = frame({ width: windowWidth, height: windowHeight, depth: wallSettings.depth });
+            windowFrame.applyMatrix4(windowMatrix);
+            resultMesh.add(windowFrame);
         });
     }
 
@@ -350,114 +591,6 @@ function addFloorCustom(
     return floorGroup;
 }
 
-// function addRoofTop(
-//     frontWallSettings: IWallSettings, 
-//     leftWallSettings: IWallSettings, 
-//     rightWallSettings: IWallSettings, 
-//     backWallSettings: IWallSettings, 
-//     material: THREE.Material
-// ): THREE.Group {
-//     const floorThickness = 0.1; // Thickness of the floor
-//     // ajust the settings
-//     frontWallSettings.height = 1;
-//     leftWallSettings.height = 1;
-//     rightWallSettings.height = 1;
-//     backWallSettings.height = 1;
-//     frontWallSettings.balcony = undefined;
-//     frontWallSettings.stairs = undefined;
-//     frontWallSettings.doors = undefined;
-//     rightWallSettings.balcony = undefined;
-//     rightWallSettings.stairs = undefined;
-//     // create 4 walls with settings
-//     const leftWall = addWallWithHoles(leftWallSettings);
-//     const frontWall = addWallWithHoles(frontWallSettings);
-//     // create the right wall object with same settings as left wall but no door or window
-//     const rightWall = addWallWithHoles(rightWallSettings);
-//     // create the back wall object with same settings as front wall but no door or window
-//     const backWall = addWallWithHoles(backWallSettings);
-
-    
-//     const floorGroup = new THREE.Group();
-
-//     // Position the walls
-//     // left wall
-//     leftWall.position.x = frontWall.position.x - (frontWallSettings.width / 2) + (leftWallSettings.depth / 2); 
-//     leftWall.position.y = frontWall.position.y; // Align with frontWall on the y-axis
-//     leftWall.position.z = frontWall.position.z + (frontWallSettings.depth / 2) - (leftWallSettings.width / 2); // Align with frontWall on the z-axis
-//     leftWall.rotation.y = -Math.PI / 2; // Rotate 90 degrees to make the angle
-//     // right wall opposite of left wall
-//     rightWall.position.x = leftWall.position.x + frontWallSettings.width;
-//     rightWall.position.y = frontWall.position.y; // Align with frontWall on the y-axis
-//     rightWall.position.z = leftWall.position.z; // Align with leftWall on the z-axis
-//     rightWall.rotation.y = Math.PI / 2; // Rotate to face the opposite direction
-//     // back wall opposite of front wall
-//     backWall.position.x = frontWall.position.x;
-//     backWall.position.y = frontWall.position.y; // Align with frontWall on the y-axis
-//     backWall.position.z = frontWall.position.z - leftWallSettings.width + frontWallSettings.depth; // Align with frontwall on the z-axis
-
-//     // add a floor ground plane if needed
-//     const floorGeometry = new THREE.BoxGeometry(frontWallSettings.width + leftWallSettings.depth, floorThickness, leftWallSettings.width); // depth is wallSettings1.width, width is wallSettings2.width, height is very thin (0.1)
-//     const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
-
-//     // Position the floor
-//     // Assuming wallMesh1.position.y is the base of the walls, adjust if necessary
-//     floorMesh.position.x = frontWall.position.x + (leftWallSettings.depth / 2); // Centered between wall2 and wall4
-//     floorMesh.position.y = frontWall.position.y - (frontWallSettings.height / 2); // Just below the walls, adjust if your wallMesh1.position.y is not the base
-//     floorMesh.position.z = leftWall.position.z; // Centered between wall1 and wall3
-
-
-//     const doorSettings2: IHoleSettings = {
-//         width: 1.5,
-//         height: 3,
-//         offsetLeft: -0.1,
-//     }
-
-//     const boxWallLeftSettings: IWallSettings = {
-//         width: 4,
-//         height: 5,
-//         depth: leftWallSettings.depth,
-//         material: material,
-//         doors: [doorSettings2],
-//         windows: undefined,
-//         balcony: undefined,
-//         stairs: undefined,
-//         position: {
-//             x: leftWall.position.x,
-//             y: leftWall.position.y,
-//             z: leftWall.position.z
-//         }
-//     };
-//     const boxWallNoDoorSettings: IWallSettings = {
-//         width: 4,
-//         height: 5,
-//         depth: leftWallSettings.depth,
-//         material: material,
-//         doors: undefined,
-//         windows: undefined,
-//         balcony: undefined,
-//         stairs: undefined,
-//         position: {
-//             x: leftWall.position.x,
-//             y: leftWall.position.y,
-//             z: leftWall.position.z
-//         }
-//     };
-
-//     // phan nho len, chua biet dat ten gi
-//     const newFloor = addFloorCustom(boxWallNoDoorSettings, boxWallLeftSettings, boxWallNoDoorSettings, boxWallNoDoorSettings, false, wallMaterial);
-//     newFloor.position.y = floorMesh.position.y + floorThickness + boxWallLeftSettings.height / 2;
-
-//     floorGroup.add(frontWall);
-//     floorGroup.add(leftWall);
-//     floorGroup.add(rightWall);
-//     floorGroup.add(backWall);
-//     // Add the floorMesh to the group after creating it as before
-//     floorGroup.add(floorMesh);
-//     floorGroup.add(newFloor);
-
-//     return floorGroup;
-// }
-
 function addRoofTop(
     frontWallSettingsInput: IWallSettings, 
     leftWallSettingsInput: IWallSettings, 
@@ -512,8 +645,50 @@ function addRoofTop(
     floorMesh.position.y = frontWall.position.y - (frontWallSettings.height / 2); // Just below the walls, adjust if your wallMesh1.position.y is not the base
     floorMesh.position.z = leftWall.position.z; // Centered between wall1 and wall3
 
+
     // Example positioning logic (adjust as necessary)
     floorMesh.position.set(frontWall.position.x + (leftWallSettings.depth / 2), frontWall.position.y - (frontWallSettings.height / 2), leftWall.position.z);
+    
+    // Add railing to the roof
+    const railingHeight = 4;
+    const railingSpace = 0.2;
+    const railingMaterial : IBalconyMaterials = {
+        default: new THREE.MeshLambertMaterial({ color: 0x00ff00 }), // Green railing
+        alu: new THREE.MeshLambertMaterial({ color: 0x111111 }) // Dark grey railing
+    }
+    const railingLeft = balconyRaling({
+        width: leftWallSettings.width - frontWallSettings.depth,
+        height: railingHeight,
+        space: railingSpace,
+        materials: railingMaterial
+    });
+    railingLeft.rotation.y = Math.PI / -2;
+    railingLeft.position.x = leftWall.position.x - leftWallSettings.depth / 2;
+    railingLeft.position.y = leftWall.position.y - leftWallSettings.height + railingHeight / 2;
+    railingLeft.position.z = leftWall.position.z - frontWallSettings.depth / 2;
+    floorMesh.add(railingLeft);
+    
+    const railingRight = railingLeft.clone();
+    railingRight.position.x = rightWall.position.x - leftWallSettings.depth / 2;
+    floorMesh.add(railingRight);
+
+    const railingFront = balconyRaling({
+        width: frontWallSettings.width - leftWallSettings.depth,
+        height: railingHeight,
+        space: railingSpace,
+        materials: railingMaterial
+    });
+    railingFront.rotation.y = Math.PI;
+    railingFront.position.x = frontWall.position.x + frontWallSettings.width / 2;
+    railingFront.position.y = frontWall.position.y - frontWallSettings.height + railingHeight / 2;
+    railingFront.position.z = frontWall.position.z + leftWallSettings.width / 2 - leftWallSettings.depth / 2;
+    floorMesh.add(railingFront);
+
+    const railingBAck = railingFront.clone();
+    railingBAck.position.z = backWall.position.z + leftWallSettings.width / 2 - leftWallSettings.depth / 2;
+    floorMesh.add(railingBAck);
+
+
 
     // Additional structure on top (adjust as necessary)
     const roofDoorSettings1 : IDoorSettings = {
@@ -524,14 +699,24 @@ function addRoofTop(
         offsetGround: 0,
         balcony: undefined,
     };
+    
     const boxWallLeftSettings = { ...leftWallSettings, width: 4, height: 5, doors: [roofDoorSettings1], windows: undefined };
     const boxWallNoDoorSettings = { ...boxWallLeftSettings, doors: undefined };
+    const roofDepth = boxWallNoDoorSettings.width;
+    
+    const roofBox = addFloorCustom(boxWallNoDoorSettings, boxWallLeftSettings, boxWallNoDoorSettings, boxWallNoDoorSettings, false, material);
+    roofBox.position.y = floorMesh.position.y + floorThickness + boxWallLeftSettings.height / 2 + 0.01;
 
-    const newFloor = addFloorCustom(boxWallNoDoorSettings, boxWallLeftSettings, boxWallNoDoorSettings, boxWallNoDoorSettings, false, material);
-    newFloor.position.y = floorMesh.position.y + floorThickness + boxWallLeftSettings.height / 2 + 0.01;
+    const flatRoofGeometry = new THREE.BoxGeometry(boxWallLeftSettings.width + boxWallLeftSettings.depth, 0.1, roofDepth);
+    // Create the flatRoof mesh with the corrected geometry
+    const flatRoof = new THREE.Mesh(flatRoofGeometry, woodMaterial);
+
+    flatRoof.position.x = roofBox.position.x + boxWallLeftSettings.depth / 2;
+    flatRoof.position.y = roofBox.position.y + boxWallLeftSettings.height / 2 + 0.05;
+    flatRoof.position.z = roofBox.position.z - boxWallLeftSettings.width / 2 + boxWallLeftSettings.depth / 2;
 
     // Add all elements to the group
-    floorGroup.add(frontWall, leftWall, rightWall, backWall, floorMesh, newFloor);
+    floorGroup.add(frontWall, leftWall, rightWall, backWall, floorMesh, roofBox, flatRoof);
 
     return floorGroup;
 }
