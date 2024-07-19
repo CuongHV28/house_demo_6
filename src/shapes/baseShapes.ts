@@ -7,9 +7,8 @@ export interface IWallSettings {
     height: number;
     depth: number;
     material: THREE.Material;
-    doors?: IHoleSettings[];
-    windows?: IHoleSettings[];
-    balcony?: IBalconySettings;
+    doors?: IDoorSettings[];
+    windows?: IWindowSettings[];
     stairs?: IStairsSettings;
     position: {
         x?: number;
@@ -23,31 +22,29 @@ export interface IWallSettings {
     };
 }
 
+
 export interface IHoleSettings {
-    width: number;
-    height?: number;
-    x?: number;
-    y?: number;
-    groundY?: number;
-    top?: number;
-    bottom?: number;
-    left?: number;
-    offsetLeft?: number;
-    shapes?: any[];
+    width: number;  // width of the hole as a percentage of the wall width
+    height: number; // height of the hole as a percentage of the wall height
+    depth: number;  // depth of the hole
+    offsetLeft: number; // offset of the hole from the left side of the wall as a percentage of the wall width
+    offsetGround: number; // offset of the hole from the bottom side of the wall as a percentage of the wall height
+}
+export interface IDoorSettings extends IHoleSettings {
+    balcony?: IBalconySettings;
+}
+
+export interface IWindowSettings extends IHoleSettings {
+
 }
 
 export interface IBalconySettings {
-    width: number;
+    // Define the properties of the 'IBalconySettings' interface here
+    width: number;  // width of the balcony, if it is full length of the wall, it is the same as the wall width
     height: number;
     depth: number;
+    isFullLength: boolean;  // if the balcony is full length of the wall
     material: THREE.Material;
-    positionRelativeToDoor: number; // This could be an index of the door it's related to
-    heightOffset: number; // Height offset from the base of the door
-    position: {
-        x?: number;
-        y: number;
-        z?: number;
-    };
 }
 
 
@@ -67,18 +64,4 @@ export interface IStairsSettings {
         y?: number;
         z?: number;
     };
-}
-export function wallHole(w: number, h: number, x: number, y: number) {
-    const hole = new Operation(new THREE.BoxGeometry(w, h, 0.7)); //BoxBufferGeometry
-    hole.operation = SUBTRACTION; //ADDITION; // ;
-    hole.position.x = x;
-    hole.position.y = y; //hole.positionFromGround(y);
-
-    hole.matrixAutoUpdate = false;
-    hole.updateMatrix();
-    // console.log(w, h, x, y);
-
-    //addWindow(w, h, x, y);
-
-    return hole;
 }
