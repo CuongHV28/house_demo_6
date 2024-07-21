@@ -13,6 +13,8 @@ import { colors,
   phongMaterial } from './materials';
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { IHoleSettings, IWallSettings, IBalconySettings, IStairsSettings, IDoorSettings } from './shapes/baseShapes';
+import { LargeFrontModel } from './houses/largeFront.settings';
+import { LargeLateralModel } from './houses/largeLateral.settings';
 
 import {
   Evaluator,
@@ -143,195 +145,17 @@ const groundPlaneYPosition = -0.5;
 scene.add(groundPlane);
 
 // config for walls
-const windowSettings1 : IDoorSettings = {
-  width: 0.1,
-  height: 0.1,
-  depth: 1,
-  offsetLeft: 0.5,
-  offsetGround: 0.8,
-};
 
-const windowSettings2 : IDoorSettings = {
-  width: 0.2,
-  height: 0.2,
-  depth: 1,
-  offsetLeft: 0.9,
-  offsetGround: 0.5,
-};
-
-const windowSettings3 : IDoorSettings = {
-  width: 0.2,
-  height: 0.2,
-  depth: 1,
-  offsetLeft: 0.25,
-  offsetGround: 0.5,
-};
-
-const windowSettings4 : IDoorSettings = {
-  width: 0.2,
-  height: 0.2,
-  depth: 1,
-  offsetLeft: 0.25,
-  offsetGround: 0.5,
-};
-
-const balconySettings1 : IBalconySettings = {
-  width: 3,
-  height: 0.3,
-  depth: 2,
-  isFullLength: true,
-  material: normalMaterial,
-};
-
-const balconySettings2 : IBalconySettings = {
-  width: 3,
-  height: 0.3,
-  depth: 2,
-  isFullLength: false,
-  material: normalMaterial,
-};
-
-const doorSettings1 : IDoorSettings = {
-  width: 0.25,
-  height: 0.6,
-  depth: 1,
-  offsetLeft: 0.2,
-  offsetGround: 0,
-  balcony: balconySettings1,
-};
-
-const doorSettings2 : IDoorSettings = {
-  width: 0.3,
-  height: 0.6,
-  depth: 1,
-  offsetLeft: 0.6,
-  offsetGround: 0,
-  balcony: balconySettings2,
-};
-
-
-const floorThickness = 0.1; // Thickness of the floor
-//stairs settings
-const steps = 10;
-const stepWidth = 1;
-const stepHeight = (6 - floorThickness) / steps;
-const stairSettings: IStairsSettings = {
-    steps: steps,
-    stepWidth: stepWidth,
-    stepHeight: stepHeight,
-    stepDepth: 0.5,
-    material: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
-    position: {
-        x: 0,
-        y: 0,
-        z: 0
-    }
-};
-
-const wallSettings1: IWallSettings = {
-  width: 10,
-  height: 6,
-  depth: 0.25,
-  material: wallMaterial,
-  doors: [doorSettings1],
-  windows: [windowSettings1, windowSettings2],
-  stairs: stairSettings,
-  position: new THREE.Vector3(0, 0, 0),
-  rotation: new THREE.Euler(0, 0, 0),
-}
-
-const wallSettings2: IWallSettings = {
-  width: 5,
-  height: 6,
-  depth: 0.25,
-  material: wallMaterial,
-  doors: [doorSettings2],
-  windows: [windowSettings3],
-  stairs: undefined,
-  position: new THREE.Vector3(0, 0, 0),
-  rotation: new THREE.Euler(0, 0, 0),
-}
-
-const wallSettings3: IWallSettings = {
-  width: 5,
-  height: 6,
-  depth: 0.25,
-  material: wallMaterial,
-  stairs: stairSettings,
-  position: new THREE.Vector3(0, 0, 0),
-  rotation: new THREE.Euler(0, 0, 0),
-}
-
-const wallSettings4: IWallSettings = {
-  width: 10,
-  height: 6,
-  depth: 0.25,
-  material: wallMaterial,
-  doors: [],
-  windows: [windowSettings1],
-  position: new THREE.Vector3(0, 0, 0),
-  rotation: new THREE.Euler(0, 0, 0),
-}
-
-
-
-const roofWallSettings1: IWallSettings = {
-  width: 10,
-  height: 6,
-  depth: 0.25,
-  material: wallMaterial,
-  position: new THREE.Vector3(0, 0, 0),
-  rotation: new THREE.Euler(0, 0, 0),
-}
-
-const roofWallSettings2: IWallSettings = {
-  width: 5,
-  height: 6,
-  depth: 0.25,
-  material: wallMaterial,
-  position: new THREE.Vector3(0, 0, 0),
-  rotation: new THREE.Euler(0, 0, 0),
-}
-
-const boxWallLeftSettings: IWallSettings = {
-    width: 4,
-    height: 5,
-    depth: wallSettings2.depth,
-    material: floorMaterial,
-    doors: [doorSettings2],
-    windows: undefined,
-    stairs: undefined,
-    position: {
-        x: 0,
-        y: 0,
-        z: 0
-    }
-};
-const boxWallNoDoorSettings: IWallSettings = {
-    width: 4,
-    height: 5,
-    depth: wallSettings2.depth,
-    material: floorMaterial,
-    doors: undefined,
-    windows: undefined,
-    stairs: undefined,
-    position: {
-      x: 0,
-      y: 0,
-      z: 0
-  }
-};
+const houseSettings = LargeFrontModel;
+// const houseSettings = LargeLateralModel;
 
 // Create the first floor
 // const floorCustom = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, true, wallMaterial);
 // floorCustom.position.set(0, 4, 0);
 // scene.add(floorCustom);
 
-
-// Function to add a new floor
-
 // Function to add floors based on user input
-let floorObjects = [];
+let floorObjects: { name: string; walls: { front: THREE.Group<THREE.Object3DEventMap>; left: THREE.Group<THREE.Object3DEventMap>; back: THREE.Group<THREE.Object3DEventMap>; right: THREE.Group<THREE.Object3DEventMap>; }; }[] = [];
 
 function addHouse(numberOfFloors: number) {
   // Basic validation
@@ -344,16 +168,16 @@ function addHouse(numberOfFloors: number) {
   removeAllFloors();
 
   for (let i = 0; i < numberOfFloors; i++) {
-    const newFloor = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, true, wallMaterial);
-    newFloor.position.set(0, 4 + i * wallSettings1.height, 0);
+    const newFloor = addFloorCustom(houseSettings.frontWallSettings, houseSettings.leftWallSettings, houseSettings.rightWallSettings, houseSettings.backWallSettings, true, wallMaterial);
+    newFloor.position.set(0, 4 + i * houseSettings.wallHeight, 0);
     scene.add(newFloor);
 
-    const frontWall = addWallWithHoles(wallSettings1);
-    const leftWall = addWallWithHoles(wallSettings2);
+    const frontWall = addWallWithHoles(houseSettings.frontWallSettings);
+    const leftWall = addWallWithHoles(houseSettings.leftWallSettings);
     // create the right wall object with same settings as left wall but no door or window
-    const rightWall = addWallWithHoles(wallSettings3);
-    // create the back wall object with same settings as front wall but no door or window
-    const backWall = addWallWithHoles(wallSettings4);
+    const rightWall = addWallWithHoles(houseSettings.rightWallSettings);
+    // create the back wall object with same settings as front wall but no door or window 
+    const backWall = addWallWithHoles(houseSettings.backWallSettings);
 
     frontWall.name = 'frontWall';
     leftWall.name = 'leftWall';
@@ -372,9 +196,9 @@ function addHouse(numberOfFloors: number) {
   }
 
   // Create and position the roof
-  const testRoof = addRoofTop(roofWallSettings1, roofWallSettings2, roofWallSettings2, roofWallSettings1, wallMaterial);
-  testRoof.position.set(0,numberOfFloors * wallSettings1.height + wallSettings1.height/4, 0); // Adjust X and Z if necessary to align with your house dimensions
-  scene.add(testRoof);
+  const houseRoof = addRoofTop(houseSettings.roofFrontWallSettings, houseSettings.roofLeftWallSettings, houseSettings.roofLeftWallSettings, houseSettings.roofFrontWallSettings, houseSettings.roofBoxSettings, wallMaterial);
+  houseRoof.position.set(0,numberOfFloors * houseSettings.wallHeight + houseSettings.wallHeight / 4, 0); // Adjust X and Z if necessary to align with your house dimensions
+  scene.add(houseRoof);
 
   updateGUIController(); // Step 3: Update the GUI with the new list of floors
 }
