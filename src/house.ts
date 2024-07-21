@@ -670,29 +670,29 @@ function addRoofTop(
     });
     railingLeft.rotation.y = Math.PI / -2;
     railingLeft.position.x = roofLeftWall.position.x - roofLeftWallSettings.depth / 2;
-    railingLeft.position.y = roofLeftWall.position.y - roofLeftWallSettings.height / 2 + railingHeight / 2;
+    railingLeft.position.y = roofLeftWall.position.y - roofLeftWallSettings.height + railingHeight / 2;
     railingLeft.position.z = roofLeftWall.position.z - roofFrontWallSettings.depth / 2;
     floorMesh.add(railingLeft);
     
-    // const railingRight = railingLeft.clone();
-    // railingRight.position.x = roofRightWall.position.x - roofLeftWallSettings.depth / 2;
-    // floorMesh.add(railingRight);
+    const railingRight = railingLeft.clone();
+    railingRight.position.x = roofRightWall.position.x - roofLeftWallSettings.depth / 2;
+    floorMesh.add(railingRight);
 
-    // const railingFront = balconyRaling({
-    //     width: roofFrontWallSettings.width - roofLeftWallSettings.depth,
-    //     height: railingHeight,
-    //     space: railingSpace,
-    //     materials: railingMaterial
-    // });
-    // railingFront.rotation.y = Math.PI;
-    // railingFront.position.x = roofFrontWall.position.x + roofFrontWallSettings.width / 2;
-    // railingFront.position.y = roofFrontWall.position.y - roofFrontWallSettings.height + railingHeight / 2;
-    // railingFront.position.z = roofFrontWall.position.z + roofLeftWallSettings.width / 2 - roofLeftWallSettings.depth / 2;
-    // floorMesh.add(railingFront);
+    const railingFront = balconyRaling({
+        width: roofFrontWallSettings.width - roofLeftWallSettings.depth,
+        height: railingHeight,
+        space: railingSpace,
+        materials: railingMaterial
+    });
+    railingFront.rotation.y = Math.PI;
+    railingFront.position.x = roofFrontWall.position.x + roofFrontWallSettings.width / 2;
+    railingFront.position.y = roofFrontWall.position.y - roofFrontWallSettings.height + railingHeight / 2;
+    railingFront.position.z = roofFrontWall.position.z + roofLeftWallSettings.width / 2 - roofLeftWallSettings.depth / 2;
+    floorMesh.add(railingFront);
 
-    // const railingBAck = railingFront.clone();
-    // railingBAck.position.z = roofBackWall.position.z + roofLeftWallSettings.width / 2 - roofLeftWallSettings.depth / 2;
-    // floorMesh.add(railingBAck);
+    const railingBack = railingFront.clone();
+    railingBack.position.z = roofBackWall.position.z + roofLeftWallSettings.width / 2 - roofLeftWallSettings.depth / 2;
+    floorMesh.add(railingBack);
 
 
 
