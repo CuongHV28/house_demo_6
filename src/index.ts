@@ -17,7 +17,7 @@ import { LargeFrontModel } from './houses/largeFront.settings';
 import { LargeLateralModel } from './houses/largeLateral.settings';
 
 
-import { largeSideD1W2S1 } from "./shapes/largeSide.d1.w2.s1";
+import { LargeSideD1W2S1 } from "./shapes/largeSide.d1.w2.s1";
 import { LargeSidePlain } from "./shapes/largeSide.plain";
 import { LargeSideW1 } from "./shapes/largeSide.w1";
 import { SmallSidePlain } from "./shapes/smallSide.plain";
@@ -156,8 +156,8 @@ scene.add(groundPlane);
 
 // config for walls
 
-// const houseSettings = LargeFrontModel;
-const houseSettings = LargeLateralModel;
+const houseSettings = LargeFrontModel;
+// const houseSettings = LargeLateralModel;
 
 // Create the first floor
 // const floorCustom = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, true, wallMaterial);
@@ -299,7 +299,7 @@ function removeAllFloors() {
 // List of walls created
 // Define an array of wall objects
 const walls = [
-  { name: 'Large Side D1 W2 S1', module: largeSideD1W2S1 },
+  { name: 'Large Side D1 W2 S1', module: LargeSideD1W2S1 },
   { name: 'Large Side Plain', module: LargeSidePlain },
   { name: 'Large Side W1', module: LargeSideW1 },
   { name: 'Small Side Plain', module: SmallSidePlain },

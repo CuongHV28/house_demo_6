@@ -7,18 +7,18 @@ const wallHeight = 6;
 const wallDepth = 0.25;
 
 const windowSettings1 : IDoorSettings = {
-    width: 0.1,
-    height: 0.1,
+    width: 0.25,
+    height: 0.25,
     depth: 1,
-    offsetLeft: 0.5,
-    offsetGround: 0.8,
+    offsetLeft: 0.84,
+    offsetGround: 0.4,
 };
 
 const windowSettings2 : IDoorSettings = {
     width: 0.2,
     height: 0.2,
     depth: 1,
-    offsetLeft: 0.9,
+    offsetLeft: 0.2,
     offsetGround: 0.5,
 };
 
@@ -55,12 +55,12 @@ const balconySettings2 : IBalconySettings = {
 };
 
 const doorSettings1 : IDoorSettings = {
-    width: 0.25,
+    width: 0.2,
     height: 0.6,
     depth: 1,
-    offsetLeft: 0.2,
+    offsetLeft: 0.5,
     offsetGround: 0,
-    balcony: balconySettings1,
+    balcony: undefined,
 };
 
 const doorSettings2 : IDoorSettings = {
@@ -91,7 +91,7 @@ const stairSettings: IStairsSettings = {
     }
 };
 
-export const LargeSideD1W2S1: IWallSettings = {
+export const LargeSideD2W2Mid: IWallSettings = {
     width: wallWidth,
     height: wallHeight,
     depth: wallDepth,

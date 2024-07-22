@@ -11,6 +11,9 @@ import { SmallSideD1W1 } from "../shapes/smallSide.d1.w1";
 import { RoofBoxWallPlain } from "../shapes/roofBoxWall.plain";
 import { RoofBoxWallD1 } from "../shapes/roofBoxWall.d1";
 import { SmallSideGarage } from "../shapes/smallSide.garage";
+import { SmallSideD2 } from "../shapes/smallSide.d2";
+import { SmallSideW1 } from "../shapes/smallSide.w1";
+import { SmallSideW2 } from "../shapes/smallSide.w2";
 
 const wallHeight = 6;
 const wallDepth = 0.25;
@@ -103,7 +106,7 @@ const stairSettings: IStairsSettings = {
 };
 
 export class LargeLateralModel {
-    public static frontWallSettings : IWallSettings = SmallSideGarage;
+    public static frontWallSettings : IWallSettings = SmallSideW2;
     public static leftWallSettings : IWallSettings = LargeSideW1;
     public static backWallSettings : IWallSettings = SmallSidePlain;
     public static rightWallSettings : IWallSettings = LargeSidePlain;

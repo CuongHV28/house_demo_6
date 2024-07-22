@@ -55,19 +55,19 @@ const balconySettings2 : IBalconySettings = {
 };
 
 const doorSettings1 : IDoorSettings = {
-    width: 0.25,
+    width: 0.4,
     height: 0.6,
     depth: 1,
-    offsetLeft: 0.2,
+    offsetLeft: 0.3,
     offsetGround: 0,
     balcony: balconySettings1,
 };
 
 const doorSettings2 : IDoorSettings = {
-    width: 0.25,
+    width: 0.2,
     height: 0.6,
     depth: 1,
-    offsetLeft: 0.6,
+    offsetLeft: 0.8,
     offsetGround: 0,
     balcony: balconySettings2,
 };
@@ -91,13 +91,13 @@ const stairSettings: IStairsSettings = {
     }
 };
 
-export const LargeSideD1W2S1: IWallSettings = {
+export const LargeSideD2: IWallSettings = {
     width: wallWidth,
     height: wallHeight,
     depth: wallDepth,
     material: wallMaterial,
-    doors: [doorSettings1],
-    windows: [windowSettings1, windowSettings2],
+    doors: [doorSettings1, doorSettings2],
+    windows: undefined,
     stairs: stairSettings,
     position: {
         x: 0,
