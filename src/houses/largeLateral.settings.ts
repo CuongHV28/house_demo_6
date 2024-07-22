@@ -2,6 +2,16 @@ import * as THREE from "three";
 import { floorMaterial, normalMaterial, wallMaterial } from "../materials";
 import { IBalconySettings, IDoorSettings, IStairsSettings, IWallSettings } from "../shapes/baseShapes";
 
+import { largeSideD1W2S1 } from "../shapes/largeSide.d1.w2.s1";
+import { LargeSidePlain } from "../shapes/largeSide.plain";
+import { LargeSideW1 } from "../shapes/largeSide.w1";
+import { SmallSidePlain } from "../shapes/smallSide.plain";
+import { SmallSideD1 } from "../shapes/smallSide.d1";
+import { SmallSideD1W1 } from "../shapes/smallSide.d1.w1";
+import { RoofBoxWallPlain } from "../shapes/roofBoxWall.plain";
+import { RoofBoxWallD1 } from "../shapes/roofBoxWall.d1";
+import { SmallSideGarage } from "../shapes/smallSide.garage";
+
 const wallHeight = 6;
 const wallDepth = 0.25;
 
@@ -74,15 +84,16 @@ const doorSettings2 : IDoorSettings = {
 
 const floorThickness = 0.1; // Thickness of the floor
 //stairs settings
-const stepWidth = 1;
+const stepWidth = 0.1;  // Width of each step is 0.1 * floorwidth
 const steps = 10;
-const stepHeight = (wallHeight - floorThickness) / steps;
+const stepHeight = 0.1; // Height of each step is 0.1 * height of the stair
+const stepDepth = 0.1; // Depth of each step is 0.1 * width of the stair
 
 const stairSettings: IStairsSettings = {
     steps: steps,
     stepWidth: stepWidth,
     stepHeight: stepHeight,
-    stepDepth: 0.5,
+    stepDepth: stepDepth,
     material: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
     position: {
         x: 0,
@@ -91,50 +102,11 @@ const stairSettings: IStairsSettings = {
     }
 };
 
-
-
 export class LargeLateralModel {
-    public static frontWallSettings : IWallSettings = {
-        width: 5,
-        height: wallHeight,
-        depth: wallDepth,
-        material: wallMaterial,
-        doors: [doorSettings1],
-        windows: [windowSettings1, windowSettings2],
-        stairs: undefined,
-        position: new THREE.Vector3(0, 0, 0),
-        rotation: new THREE.Euler(0, 0, 0),
-    };
-    public static leftWallSettings : IWallSettings = {
-        width: 10,
-        height: wallHeight,
-        depth: wallDepth,
-        material: wallMaterial,
-        doors: [doorSettings2],
-        windows: [windowSettings3],
-        stairs: stairSettings,
-        position: new THREE.Vector3(0, 0, 0),
-        rotation: new THREE.Euler(0, 0, 0),
-    };
-    public static backWallSettings : IWallSettings = {
-        width: 5,
-        height: 6,
-        depth: 0.25,
-        material: wallMaterial,
-        doors: [],
-        windows: [windowSettings1],
-        position: new THREE.Vector3(0, 0, 0),
-        rotation: new THREE.Euler(0, 0, 0),
-    };
-    public static rightWallSettings : IWallSettings = {
-        width: 10,
-        height: wallHeight,
-        depth: wallDepth,
-        material: wallMaterial,
-        stairs: undefined,
-        position: new THREE.Vector3(0, 0, 0),
-        rotation: new THREE.Euler(0, 0, 0),
-    };
+    public static frontWallSettings : IWallSettings = SmallSideGarage;
+    public static leftWallSettings : IWallSettings = LargeSideW1;
+    public static backWallSettings : IWallSettings = SmallSidePlain;
+    public static rightWallSettings : IWallSettings = LargeSidePlain;
     public static roofFrontWallSettings : IWallSettings = {
         width: 5,
         height: wallHeight,
@@ -151,33 +123,11 @@ export class LargeLateralModel {
         position: new THREE.Vector3(0, 0, 0),
         rotation: new THREE.Euler(0, 0, 0),
     };
-    public static boxWallLeftSettings : IWallSettings = {
-        width: 4,
-        height: 5,
-        depth: wallDepth,
-        material: floorMaterial,
-        doors: [doorSettings2],
-        windows: undefined,
-        stairs: undefined,
-        position: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    };
-    public static boxWallNoDoorSettings : IWallSettings = {
-        width: 4,
-        height: 5,
-        depth: wallDepth,
-        material: floorMaterial,
-        doors: undefined,
-        windows: undefined,
-        stairs: undefined,
-        position: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
+    public static roofBoxSettings = {
+        frontSide: RoofBoxWallPlain,
+        leftSide: RoofBoxWallPlain,
+        rightSide: RoofBoxWallPlain,
+        backSide: RoofBoxWallD1,
     };
     public static floorThickness = floorThickness;
     public static stairSettings = stairSettings;

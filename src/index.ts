@@ -16,6 +16,16 @@ import { IHoleSettings, IWallSettings, IBalconySettings, IStairsSettings, IDoorS
 import { LargeFrontModel } from './houses/largeFront.settings';
 import { LargeLateralModel } from './houses/largeLateral.settings';
 
+
+import { largeSideD1W2S1 } from "./shapes/largeSide.d1.w2.s1";
+import { LargeSidePlain } from "./shapes/largeSide.plain";
+import { LargeSideW1 } from "./shapes/largeSide.w1";
+import { SmallSidePlain } from "./shapes/smallSide.plain";
+import { SmallSideD1 } from "./shapes/smallSide.d1";
+import { SmallSideD1W1 } from "./shapes/smallSide.d1.w1";
+import { RoofBoxWallPlain } from "./shapes/roofBoxWall.plain";
+import { RoofBoxWallD1 } from "./shapes/roofBoxWall.d1";
+
 import {
   Evaluator,
   EdgesHelper,
@@ -146,8 +156,8 @@ scene.add(groundPlane);
 
 // config for walls
 
-const houseSettings = LargeFrontModel;
-// const houseSettings = LargeLateralModel;
+// const houseSettings = LargeFrontModel;
+const houseSettings = LargeLateralModel;
 
 // Create the first floor
 // const floorCustom = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, true, wallMaterial);
@@ -168,7 +178,7 @@ function addHouse(numberOfFloors: number) {
   removeAllFloors();
 
   for (let i = 0; i < numberOfFloors; i++) {
-    const newFloor = addFloorCustom(houseSettings.frontWallSettings, houseSettings.leftWallSettings, houseSettings.rightWallSettings, houseSettings.backWallSettings, true, wallMaterial);
+    const newFloor = addFloorCustom(houseSettings.frontWallSettings, houseSettings.leftWallSettings, houseSettings.rightWallSettings, houseSettings.backWallSettings, houseSettings.stairSettings, wallMaterial);
     newFloor.position.set(0, 4 + i * houseSettings.wallHeight, 0);
     scene.add(newFloor);
 
@@ -285,12 +295,43 @@ function removeAllFloors() {
   updateGUIController(); // Update the GUI to reflect the removal
 }
 
+
+// List of walls created
+// Define an array of wall objects
+const walls = [
+  { name: 'Large Side D1 W2 S1', module: largeSideD1W2S1 },
+  { name: 'Large Side Plain', module: LargeSidePlain },
+  { name: 'Large Side W1', module: LargeSideW1 },
+  { name: 'Small Side Plain', module: SmallSidePlain },
+  { name: 'Small Side D1', module: SmallSideD1 },
+  { name: 'Small Side D1 W1', module: SmallSideD1W1 },
+  { name: 'Roof Box Wall Plain', module: RoofBoxWallPlain },
+  { name: 'Roof Box Wall D1', module: RoofBoxWallD1 }
+];
+
+function updateWallList(walls: any[]) {
+  // Clear existing list
+  while (wallsListFolder.__controllers.length > 0) {
+    wallsListFolder.remove(wallsListFolder.__controllers[0]);
+  }
+
+  // Add each wall to the "List Walls" folder
+  walls.forEach(wall => {
+    wallsListFolder.add(wall, 'name').name(wall.name).onChange(() => {
+      // Interaction logic here, e.g., displaying wall details or editing
+      console.log(`Selected: ${wall.name}`);
+    });
+  });
+}
+
+
 // Create a new dat.GUI instance
 const gui = new dat.GUI();
 
 // Create a folder for floor settings
 const floorFolder = gui.addFolder('Floor Settings');
 const floorListFolder = gui.addFolder('Floor List');
+const wallsListFolder = gui.addFolder('List Walls');
 
 // Object to hold user input
 const floorData = {
@@ -316,6 +357,9 @@ function init() {
   // Programmatically toggle the visibility of the floor list folder
   // floorListFolder.close(); // Close the folder
   floorListFolder.open(); // Then open it again
+
+  // Update the list of walls
+  updateWallList(walls);
 }
 
 init();

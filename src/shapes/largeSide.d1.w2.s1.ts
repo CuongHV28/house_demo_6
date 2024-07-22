@@ -64,7 +64,7 @@ const doorSettings1 : IDoorSettings = {
 };
 
 const doorSettings2 : IDoorSettings = {
-    width: 0.3,
+    width: 0.25,
     height: 0.6,
     depth: 1,
     offsetLeft: 0.6,

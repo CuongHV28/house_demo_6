@@ -17,6 +17,7 @@ import { colors,
 import { IHoleSettings, IWallSettings, IStairsSettings, IDoorSettings } from './shapes/baseShapes';
 import { CSG } from 'three-csg-ts';
 import { ADDITION, Evaluator, Operation, SUBTRACTION } from 'three-bvh-csg';
+import { s } from 'vite/dist/node/types.d-aGj9QkWt';
 
 function addWallWithDoorAndWindow(
     wallSettings: IWallSettings, 
@@ -228,12 +229,12 @@ const shutter = ({ width = 2, height = 2, materials }: IShutter) => {
   
     const innerheight = height - 0.05 - 0.05;
     const innerwidth = width - 0.05 - 0.05;
-    const shutterparts = Math.ceil(innerheight / 0.1 + 0.005);
     const shutterPartHeight = 0.1;
+    const shutterparts = Math.ceil(innerheight / (shutterPartHeight + 0.005));
     const spacingBetweenParts = 0.005;
   
     const originalshutterpart = new Operation(
-        new THREE.BoxGeometry(innerwidth, 0.1, 0.02)
+        new THREE.BoxGeometry(innerwidth, shutterPartHeight, 0.02)
     );
     originalshutterpart.operation = ADDITION;
     originalshutterpart.position.x = 0.01;
@@ -305,7 +306,7 @@ function addWallWithHoles(wallSettings: IWallSettings) {
                     default: woodMaterial,
                     alu: windowMaterial,
                 },
-                open: [0, 0],
+                open: [0],
             };
             const innerWidth = doorWidth - frameThickness * 2;
             const shutterwidth = innerWidth / doorSettings.shutters;
@@ -346,7 +347,7 @@ function addWallWithHoles(wallSettings: IWallSettings) {
                 const doorclone = doorShutter.clone();
                 doorGroup.add(doorclone);
                 if (i === 1) {
-                    doorclone.position.x = holeX;
+                    doorclone.position.x = holeX - frameThickness;
                 } else if (isEven) {
                     doorclone.position.x = holeX - wallSettings.width / 2 + doorWidth / 2;
                 } else {
@@ -354,7 +355,6 @@ function addWallWithHoles(wallSettings: IWallSettings) {
                 }
                 doorclone.position.y = holeY;
                 doorclone.position.z = holeZ;
-
                 doorclone.matrixAutoUpdate = false;
                 doorclone.updateMatrix();
 
@@ -460,6 +460,25 @@ function addWallWithHoles(wallSettings: IWallSettings) {
 
     // Add stairs
     if (wallSettings.stairs) {
+        const stairDepth = wallSettings.width / 2;
+        const stairHeight = wallSettings.height;
+        const stepWidth = wallSettings.stairs.stepWidth * (wallSettings.width);
+        const stepHeight = wallSettings.stairs.stepHeight * stairHeight;
+        const stepDepth = wallSettings.stairs.stepDepth * stairDepth;
+        const steps = stairHeight / stepHeight;
+
+        const stairSettings: IStairsSettings = {
+            steps: steps,
+            stepWidth: stepWidth,
+            stepHeight: stepHeight,
+            stepDepth: stepDepth,
+            material: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
+            position: {
+                x: 0,
+                y: 0,
+                z: 0
+            }
+        };
         const outStair = createStairs(wallSettings.stairs); // Assuming stairSettings is defined
         outStair.rotateY(-Math.PI / 2); // Rotate the staircase to face the desired direction
         // Position the staircase outside the wall
@@ -495,33 +514,18 @@ function createStairs(settings : IStairsSettings) {
 }
 
 
+
 function addFloorCustom(
     frontWallSettings: IWallSettings, 
     leftWallSettings: IWallSettings, 
     rightWallSettings: IWallSettings, 
     backWallSettings: IWallSettings, 
-    hasInsideStairs: boolean,
+    insideStairs: IStairsSettings,
     material: THREE.Material
 ): THREE.Group {
     
     // assume settings are defined
     const floorThickness = 0.1; // Thickness of the floor
-    //stairs settings
-    const steps = 10;
-    const stepWidth = 1;
-    const stepHeight = (frontWallSettings.height - floorThickness) / steps;
-    const stairSettings: IStairsSettings = {
-        steps: steps,
-        stepWidth: stepWidth,
-        stepHeight: stepHeight,
-        stepDepth: 0.5,
-        material: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
-        position: {
-            x: 0,
-            y: 0,
-            z: 0
-        }
-    };
 
     // create 4 walls with settings
     const leftWall = addWallWithHoles(leftWallSettings);
@@ -572,16 +576,36 @@ function addFloorCustom(
     // Add the floorMesh to the group after creating it as before
     floorGroup.add(floorMesh);
     // inside stair
-    if (hasInsideStairs) {
+    if (insideStairs) {
         // Add a staircase starting at the top of the floor mesh inside the floor
+        // assume the staircase is at the center of the floor
+        const stairDepth = (leftWallSettings.width - frontWallSettings.depth) / 2;
+        const stairHeight = frontWallSettings.height - floorThickness;
+        const stepWidth = insideStairs.stepWidth * (frontWallSettings.width - 2 * leftWallSettings.depth);
+        const stepHeight = insideStairs.stepHeight * stairHeight;
+        const stepDepth = insideStairs.stepDepth * stairDepth;
+        const steps = stairHeight / stepHeight;
+
+        const stairSettings: IStairsSettings = {
+            steps: steps,
+            stepWidth: stepWidth,
+            stepHeight: stepHeight,
+            stepDepth: stepDepth,
+            material: new THREE.MeshLambertMaterial({ color: 0x00ff00 }),
+            position: {
+                x: 0,
+                y: 0,
+                z: 0
+            }
+        };
         const inStair = createStairs(stairSettings); // Example: 10 steps, each 1 unit wide, 0.5 units high, 0.5 units deep
         // Position the staircase at the top of the floor mesh
         // Assuming the staircase starts at the start of the backwall of the floor
-        inStair.rotateY(-Math.PI / 2); // Rotate the staircase to face the opposite direction
-        inStair.position.x = floorMesh.position.x - (stairSettings.stepDepth * stairSettings.steps) + 1.5 * leftWallSettings.depth + 1; // Adjust based on the total width of the staircase
+        // inStair.rotateY(-Math.PI / 2); // Rotate the staircase to face the opposite direction
+        inStair.position.x = floorMesh.position.x; // Adjust based on the total width of the staircase
         inStair.position.y = floorMesh.position.y + 0.05; // Slightly above the floor to avoid z-fighting
         // Correct calculation for the staircase's Z position to be centered and flush against the back wall
-        inStair.position.z = backWall.position.z + backWallSettings.depth /2 + stairSettings.stepWidth / 2; // Adjust based on the total depth of the staircase
+        inStair.position.z = floorMesh.position.z ; // Adjust based on the total depth of the staircase
 
         // Add the staircase to the group
         floorGroup.add(inStair);
@@ -699,7 +723,7 @@ function addRoofTop(
     // Additional structure on top (adjust as necessary)
     const roofDepth = roofBoxSettings.frontSide.width;
     
-    const roofBox = addFloorCustom(roofBoxSettings.frontSide, roofBoxSettings.leftSide, roofBoxSettings.backSide, roofBoxSettings.backSide, false, material);
+    const roofBox = addFloorCustom(roofBoxSettings.frontSide, roofBoxSettings.leftSide, roofBoxSettings.rightSide, roofBoxSettings.backSide, false, material);
     roofBox.position.y = floorMesh.position.y + floorThickness + roofBoxSettings.leftSide.height / 2 + 0.01;
 
     const flatRoofGeometry = new THREE.BoxGeometry(roofBoxSettings.frontSide.width + roofBoxSettings.frontSide.depth, 0.1, roofDepth);
