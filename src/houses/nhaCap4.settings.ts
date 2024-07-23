@@ -46,7 +46,7 @@ const stairSettings: IStairsSettings = {
 
 
 export class NhaCap4Model {
-    public static frontWallSettings : IWallSettings = EqualSideD2;
+    public static frontWallSettings : IWallSettings = EqualSideD1W1;
     public static leftWallSettings : IWallSettings = EqualSidePlain;
     public static backWallSettings : IWallSettings = EqualSideD1;
     public static rightWallSettings : IWallSettings = EqualSideW2;

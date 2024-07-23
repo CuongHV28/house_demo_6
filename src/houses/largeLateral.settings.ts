@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { floorMaterial, normalMaterial, wallMaterial } from "../materials";
 import { IBalconySettings, IDoorSettings, IStairsSettings, IWallSettings } from "../shapes/baseShapes";
 
-import { largeSideD1W2S1 } from "../shapes/largeSide.d1.w2.s1";
+import { LargeSideD1W2S1 } from "../shapes/largeSide.d1.w2.s1";
 import { LargeSidePlain } from "../shapes/largeSide.plain";
 import { LargeSideW1 } from "../shapes/largeSide.w1";
 import { SmallSidePlain } from "../shapes/smallSide.plain";
@@ -106,7 +106,7 @@ const stairSettings: IStairsSettings = {
 };
 
 export class LargeLateralModel {
-    public static frontWallSettings : IWallSettings = SmallSideW2;
+    public static frontWallSettings : IWallSettings = SmallSideD2;
     public static leftWallSettings : IWallSettings = LargeSideW1;
     public static backWallSettings : IWallSettings = SmallSidePlain;
     public static rightWallSettings : IWallSettings = LargeSidePlain;

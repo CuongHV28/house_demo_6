@@ -158,8 +158,8 @@ scene.add(groundPlane);
 // config for walls
 
 // const houseSettings = LargeFrontModel;
-// const houseSettings = LargeLateralModel;
-const houseSettings = NhaCap4Model;
+const houseSettings = LargeLateralModel;
+// const houseSettings = NhaCap4Model;
 
 // Create the first floor
 // const floorCustom = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, true, wallMaterial);
