@@ -557,13 +557,13 @@ function addFloorCustom(
     backWall.position.z = frontWall.position.z - leftWallSettings.width + frontWallSettings.depth; // Align with frontwall on the z-axis
 
     // add a floor ground plane if needed
-    const floorGeometry = new THREE.BoxGeometry(frontWallSettings.width + leftWallSettings.depth, floorThickness, leftWallSettings.width); // depth is wallSettings1.width, width is wallSettings2.width, height is very thin (0.1)
+    const floorGeometry = new THREE.BoxGeometry(frontWallSettings.width - leftWallSettings.depth, floorThickness, leftWallSettings.width - frontWallSettings.depth); // depth is wallSettings1.width, width is wallSettings2.width, height is very thin (0.1)
     const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
 
     // Position the floor
     // Assuming wallMesh1.position.y is the base of the walls, adjust if necessary
     floorMesh.position.x = frontWall.position.x + (leftWallSettings.depth / 2); // Centered between wall2 and wall4
-    floorMesh.position.y = frontWall.position.y - (frontWallSettings.height / 2); // Just below the walls, adjust if your wallMesh1.position.y is not the base
+    floorMesh.position.y = frontWall.position.y - (frontWallSettings.height / 2) + floorThickness / 2; // Just below the walls, adjust if your wallMesh1.position.y is not the base
     floorMesh.position.z = leftWall.position.z; // Centered between wall1 and wall3
 
     
@@ -626,6 +626,7 @@ function addRoofTop(
         rightSide: IWallSettings,
         backSide: IWallSettings,
     },
+    hasRailings: boolean,
     material: THREE.Material
 ): THREE.Group {
     const floorThickness = 0.1; // Thickness of the floor
@@ -680,62 +681,65 @@ function addRoofTop(
     floorMesh.position.set(roofFrontWall.position.x + (roofLeftWallSettings.depth / 2), roofFrontWall.position.y - (roofFrontWallSettings.height / 2), roofLeftWall.position.z);
     
     // Add railing to the roof
-    const railingHeight = roofBoxSettings.leftSide.height - roofFrontWallSettings.height + 0.01;
-    const railingSpace = 0.3;
-    const railingMaterial : IBalconyMaterials = {
-        default: new THREE.MeshLambertMaterial({ color: 0x00ff00 }), // Green railing
-        alu: new THREE.MeshLambertMaterial({ color: 0x111111 }) // Dark grey railing
+    if (hasRailings) {
+        const railingHeight = roofBoxSettings.leftSide.height - roofFrontWallSettings.height + 0.01;
+        const railingSpace = 0.3;
+        const railingMaterial : IBalconyMaterials = {
+            default: new THREE.MeshLambertMaterial({ color: 0x00ff00 }), // Green railing
+            alu: new THREE.MeshLambertMaterial({ color: 0x111111 }) // Dark grey railing
+        }
+        const railingLeft = balconyRaling({
+            width: roofLeftWallSettings.width - roofFrontWallSettings.depth,
+            height: railingHeight,
+            space: railingSpace,
+            materials: railingMaterial
+        });
+        railingLeft.rotation.y = Math.PI / -2;
+        railingLeft.position.x = roofLeftWall.position.x - roofLeftWallSettings.depth / 2;
+        railingLeft.position.y = roofLeftWall.position.y - roofLeftWallSettings.height + railingHeight / 2;
+        railingLeft.position.z = roofLeftWall.position.z - roofFrontWallSettings.depth / 2;
+        floorMesh.add(railingLeft);
+        
+        const railingRight = railingLeft.clone();
+        railingRight.position.x = roofRightWall.position.x - roofLeftWallSettings.depth / 2;
+        floorMesh.add(railingRight);
+    
+        const railingFront = balconyRaling({
+            width: roofFrontWallSettings.width - roofLeftWallSettings.depth,
+            height: railingHeight,
+            space: railingSpace,
+            materials: railingMaterial
+        });
+        railingFront.rotation.y = Math.PI;
+        railingFront.position.x = roofFrontWall.position.x + roofFrontWallSettings.width / 2;
+        railingFront.position.y = roofFrontWall.position.y - roofFrontWallSettings.height + railingHeight / 2;
+        railingFront.position.z = roofFrontWall.position.z + roofLeftWallSettings.width / 2 - roofLeftWallSettings.depth / 2;
+        floorMesh.add(railingFront);
+    
+        const railingBack = railingFront.clone();
+        railingBack.position.z = roofBackWall.position.z + roofLeftWallSettings.width / 2 - roofLeftWallSettings.depth / 2;
+        floorMesh.add(railingBack);
     }
-    const railingLeft = balconyRaling({
-        width: roofLeftWallSettings.width - roofFrontWallSettings.depth,
-        height: railingHeight,
-        space: railingSpace,
-        materials: railingMaterial
-    });
-    railingLeft.rotation.y = Math.PI / -2;
-    railingLeft.position.x = roofLeftWall.position.x - roofLeftWallSettings.depth / 2;
-    railingLeft.position.y = roofLeftWall.position.y - roofLeftWallSettings.height + railingHeight / 2;
-    railingLeft.position.z = roofLeftWall.position.z - roofFrontWallSettings.depth / 2;
-    floorMesh.add(railingLeft);
-    
-    const railingRight = railingLeft.clone();
-    railingRight.position.x = roofRightWall.position.x - roofLeftWallSettings.depth / 2;
-    floorMesh.add(railingRight);
-
-    const railingFront = balconyRaling({
-        width: roofFrontWallSettings.width - roofLeftWallSettings.depth,
-        height: railingHeight,
-        space: railingSpace,
-        materials: railingMaterial
-    });
-    railingFront.rotation.y = Math.PI;
-    railingFront.position.x = roofFrontWall.position.x + roofFrontWallSettings.width / 2;
-    railingFront.position.y = roofFrontWall.position.y - roofFrontWallSettings.height + railingHeight / 2;
-    railingFront.position.z = roofFrontWall.position.z + roofLeftWallSettings.width / 2 - roofLeftWallSettings.depth / 2;
-    floorMesh.add(railingFront);
-
-    const railingBack = railingFront.clone();
-    railingBack.position.z = roofBackWall.position.z + roofLeftWallSettings.width / 2 - roofLeftWallSettings.depth / 2;
-    floorMesh.add(railingBack);
-
-
-
     // Additional structure on top (adjust as necessary)
-    const roofDepth = roofBoxSettings.frontSide.width;
-    
-    const roofBox = addFloorCustom(roofBoxSettings.frontSide, roofBoxSettings.leftSide, roofBoxSettings.rightSide, roofBoxSettings.backSide, false, material);
-    roofBox.position.y = floorMesh.position.y + floorThickness + roofBoxSettings.leftSide.height / 2 + 0.01;
+    if (roofBoxSettings) {
+        const roofDepth = roofBoxSettings.frontSide.width;
+        
+        const roofBox = addFloorCustom(roofBoxSettings.frontSide, roofBoxSettings.leftSide, roofBoxSettings.rightSide, roofBoxSettings.backSide, false, material);
+        roofBox.position.y = floorMesh.position.y + floorThickness + roofBoxSettings.leftSide.height / 2 + 0.01;
 
-    const flatRoofGeometry = new THREE.BoxGeometry(roofBoxSettings.frontSide.width + roofBoxSettings.frontSide.depth, 0.1, roofDepth);
-    // Create the flatRoof mesh with the corrected geometry
-    const flatRoof = new THREE.Mesh(flatRoofGeometry, woodMaterial);
+        const flatRoofGeometry = new THREE.BoxGeometry(roofBoxSettings.frontSide.width + roofBoxSettings.frontSide.depth, 0.1, roofDepth);
+        // Create the flatRoof mesh with the corrected geometry
+        const flatRoof = new THREE.Mesh(flatRoofGeometry, woodMaterial);
 
-    flatRoof.position.x = roofBox.position.x + roofBoxSettings.leftSide.depth / 2;
-    flatRoof.position.y = roofBox.position.y + roofBoxSettings.leftSide.height / 2 + 0.05;
-    flatRoof.position.z = roofBox.position.z - roofBoxSettings.leftSide.width / 2 + roofBoxSettings.leftSide.depth / 2;
+        flatRoof.position.x = roofBox.position.x + roofBoxSettings.leftSide.depth / 2;
+        flatRoof.position.y = roofBox.position.y + roofBoxSettings.leftSide.height / 2 + 0.05;
+        flatRoof.position.z = roofBox.position.z - roofBoxSettings.leftSide.width / 2 + roofBoxSettings.leftSide.depth / 2;
 
-    // Add all elements to the group
-    floorGroup.add(roofFrontWall, roofLeftWall, roofRightWall, roofBackWall, floorMesh, roofBox, flatRoof);
+        // Add all elements to the group
+        floorGroup.add(roofFrontWall, roofLeftWall, roofRightWall, roofBackWall, floorMesh, roofBox, flatRoof);
+    } else {
+        floorGroup.add(roofFrontWall, roofLeftWall, roofRightWall, roofBackWall, floorMesh);
+    }
 
     return floorGroup;
 }

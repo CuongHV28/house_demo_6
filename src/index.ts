@@ -45,6 +45,7 @@ import {
     addRoofTop
 } from './house';
 import * as dat from 'dat.gui';
+import { NhaCap4Model } from './houses/nhaCap4.settings';
 
 
 // init scene
@@ -156,8 +157,9 @@ scene.add(groundPlane);
 
 // config for walls
 
-const houseSettings = LargeFrontModel;
+// const houseSettings = LargeFrontModel;
 // const houseSettings = LargeLateralModel;
+const houseSettings = NhaCap4Model;
 
 // Create the first floor
 // const floorCustom = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, true, wallMaterial);
@@ -206,7 +208,8 @@ function addHouse(numberOfFloors: number) {
   }
 
   // Create and position the roof
-  const houseRoof = addRoofTop(houseSettings.roofFrontWallSettings, houseSettings.roofLeftWallSettings, houseSettings.roofLeftWallSettings, houseSettings.roofFrontWallSettings, houseSettings.roofBoxSettings, wallMaterial);
+  const houseRoof = addRoofTop(houseSettings.roofFrontWallSettings, houseSettings.roofLeftWallSettings, houseSettings.roofLeftWallSettings, houseSettings.roofFrontWallSettings, houseSettings.roofBoxSettings, false, wallMaterial);
+  // const houseRoof = addRoofTop(houseSettings.roofFrontWallSettings, houseSettings.roofLeftWallSettings, houseSettings.roofLeftWallSettings, houseSettings.roofFrontWallSettings, houseSettings.roofBoxSettings, true, wallMaterial);
   houseRoof.position.set(0,numberOfFloors * houseSettings.wallHeight + houseSettings.wallHeight / 4, 0); // Adjust X and Z if necessary to align with your house dimensions
   scene.add(houseRoof);
 

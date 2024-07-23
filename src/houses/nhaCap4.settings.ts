@@ -14,6 +14,12 @@ import { LargeSideD2 } from "../shapes/largeSide.d2";
 import { LargeSideGarage } from "../shapes/largeSide.garage";
 import { LargeSideD2W2Mid } from "../shapes/largeSide.d1.w2.mid";
 import { LargeSideW2 } from "../shapes/largeSide.w2";
+import { EqualSidePlain } from "../shapes/equalSide.plain";
+import { EqualSideD1 } from "../shapes/equalSide.d1";
+import { EqualSideD2 } from "../shapes/equalSide.d2";
+import { EqualSideD1W1 } from "../shapes/equalSide.d1.w1";
+import { EqualSideSideD1W2Mid } from "../shapes/equalSide.d1.w2.mid";
+import { EqualSideW2 } from "../shapes/equalSide.w2";
 
 const wallHeight = 6;
 const wallDepth = 0.25;
@@ -39,13 +45,13 @@ const stairSettings: IStairsSettings = {
 };
 
 
-export class LargeFrontModel {
-    public static frontWallSettings : IWallSettings = LargeSideD1W2S1;
-    public static leftWallSettings : IWallSettings = SmallSideD1W1;
-    public static backWallSettings : IWallSettings = LargeSideW1;
-    public static rightWallSettings : IWallSettings = SmallSideD1;
+export class NhaCap4Model {
+    public static frontWallSettings : IWallSettings = EqualSideD2;
+    public static leftWallSettings : IWallSettings = EqualSidePlain;
+    public static backWallSettings : IWallSettings = EqualSideD1;
+    public static rightWallSettings : IWallSettings = EqualSideW2;
     public static roofFrontWallSettings : IWallSettings = {
-        width: LargeSideD1W2S1.width,
+        width: EqualSidePlain.width,
         height: wallHeight,
         depth: wallDepth,
         material: wallMaterial,
@@ -53,19 +59,14 @@ export class LargeFrontModel {
         rotation: new THREE.Euler(0, 0, 0),
     };
     public static roofLeftWallSettings : IWallSettings = {
-        width: SmallSideD1W1.width,
+        width: EqualSidePlain.width,
         height: wallHeight,
         depth: wallDepth,
         material: wallMaterial,
         position: new THREE.Vector3(0, 0, 0),
         rotation: new THREE.Euler(0, 0, 0),
     };
-    public static roofBoxSettings = {
-        frontSide: RoofBoxWallPlain,
-        leftSide: RoofBoxWallD1,
-        rightSide: RoofBoxWallPlain,
-        backSide: RoofBoxWallPlain,
-    };
+    public static roofBoxSettings = undefined;
     public static floorThickness = floorThickness;
     public static stairSettings = stairSettings;
     public static wallHeight = wallHeight;
