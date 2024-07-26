@@ -161,11 +161,6 @@ scene.add(groundPlane);
 const houseSettings = LargeLateralModel;
 // const houseSettings = NhaCap4Model;
 
-// Create the first floor
-// const floorCustom = addFloorCustom(wallSettings1, wallSettings2, wallSettings3, wallSettings4, true, wallMaterial);
-// floorCustom.position.set(0, 4, 0);
-// scene.add(floorCustom);
-
 // Function to add floors based on user input
 let floorObjects: { name: string; walls: { front: THREE.Group<THREE.Object3DEventMap>; left: THREE.Group<THREE.Object3DEventMap>; back: THREE.Group<THREE.Object3DEventMap>; right: THREE.Group<THREE.Object3DEventMap>; }; }[] = [];
 
@@ -367,9 +362,33 @@ function init() {
 
 init();
 
-// const testRoof = addRoofTop(wallSettings1, wallSettings2, wallSettings3, wallSettings4, wallMaterial);
-// testRoof.position.set(-10, 4, 7);
-// scene.add(testRoof);
+// function setCameraPOV(x: number, y: number, z: number) {
+//   camera.position.set(x, y, z);
+//   camera.lookAt(scene.position);
+// }
+
+function captureScreenshot() {
+  renderer.render(scene, camera);
+  const dataURL = renderer.domElement.toDataURL('image/png');
+  return dataURL;
+}
+
+// Example usage
+// setCameraPOV(2, 2, 5);
+const screenshot = captureScreenshot();
+console.log(screenshot); // This will log the data URL of the screenshot
+
+function downloadScreenshot(dataURL: string, filename = 'screenshot.png') {
+  const link = document.createElement('a');
+  link.href = dataURL;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Example usage
+downloadScreenshot(screenshot);
 
 
 
